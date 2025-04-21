@@ -1,52 +1,43 @@
-# Ignore temporary and backup files
-*.tmp
-*.bak
-*.swp
-*.swo
-*.log
-*.lock
-.DS_Store
-Thumbs.db
+# === Python ===
+__pycache__/           # Bytecode cache
+*.py[cod]              # Compiled Python files
+*.egg                  # Distribution files
+*.egg-info/            # Metadata for installed packages
+dist/                  # Distribution folder
+build/                 # Build folder
+.env                   # Environment variable file
+.venv/                 # Virtual environment
+*.log                  # Log files
 
-# Ignore build and output directories
-/build/
-/dist/
-/out/
-/bin/
-/generated/
+# === Rust (Cargo) ===
+target/                # Compiled Rust output
+**/*.rs.bk             # Rust backup files
+Cargo.lock             # Package lock file
 
-# Ignore system-specific files
-*.cache
-*.DS_Store
-*.Spotlight-V100
-*.Trashes
-*.~lock.*
-/._*
+# === KiCad ===
+*.bak                  # Backup files
+*.kicad_pcb-bak        # PCB file backups
+*.tmp                  # Temporary files
+*.cache/               # KiCad cache folder
+*.kicad_sch-bak        # Schematic backups
+*.net                  # Netlist files
+*.xml                  # BOM or other generated files
+*.dcm                  # Symbol library cache
+sym-lib-table          # Symbol library table
+fp-lib-table           # Footprint library table
+.autosave              # Autosave file
 
-# Ignore version control metadata
-*.orig
-*.rej
+# === Logisim ===
+*.class                # Compiled Java class files
+*.logisim.bak          # Logisim backups
+*.logisim~*            # Editor backup files
+*.logisim.bak~         # Logisim editor backup
 
-# Ignore archives and compressed files
-*.zip
-*.tar
-*.gz
-*.rar
-*.7z
+# === OS-specific ===
+.DS_Store              # macOS system file
+Thumbs.db              # Windows image cache
 
-# Ignore large binary files
-*.iso
-*.dmg
-*.exe
-*.dll
-*.so
-*.o
-*.a
-*.lib
-*.obj
-
-# Ignore user-specific configuration
-*.env
-*.config.local
-/private/
+# === General/Editor ===
+*.swp                  # Vim swap file
+*.swo                  # Vim swap file
 
