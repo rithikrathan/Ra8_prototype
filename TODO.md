@@ -1,1 +1,2 @@
-1) add overflow flag
+start working on building the instruction set 
+
