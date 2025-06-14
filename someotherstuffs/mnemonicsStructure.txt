@@ -1,0 +1,46 @@
+OPCODE_STRUCTURE:   [X|X|0|0|0|0|0|#]
+					[---|---------|-]
+					  | 	 |     |
+					  | 	 |     |
+					  | 	 |     +-> bit to identify branching instructions
+					  | 	 |
+					  | 	 +-> instruction ID 
+					  |
+					  +-> number of immediate bytes following the opcode
+
+Types of immediate bytes:
+	=> immediate data:
+		structure:
+				byte_1: [-IMM-DATA-BYTE-]
+
+	=> register type:
+		structure:
+				byte_1: [_|_|_|_|s|A|A|A]
+
+	=> immediate type:
+		structure:
+				byte_1: [-IMM-DATA-BYTE-]
+
+	=> address type:
+		structure:
+				byte_1: [-addr--L--BYTE-]
+				byte_2: [-addr--H--BYTE-]
+
+	=> register,register types:
+		structure:
+				byte_1: [s|A|A|A|s|B|B|B]
+
+	=> register , immediate data types:
+		structure:
+				byte_1: [s|R|R|R|s|A|A|A]
+				byte_2: [-IMM-DATA-BYTE-]
+
+	=> address,register types:
+		structure: 
+				byte_1: [-addr--L--BYTE-]
+				byte_2: [-addr--H--BYTE-]
+				byte_3: [_|_|_|_|A|A|A|A]
+	
+
+
+

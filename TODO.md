@@ -18,3 +18,6 @@ first work on increment program counter signal and the ready signal from the fet
 once you did that then test it with the programm counter, instruction memeory and some data registers to make sure it works perfectly.
 we will take care of pipeline hazards later now assume the ideal pipeline behaviour and proceed to design
 
+-> [fixed] another probelm the dff that is used to extend the ready signal does not work with the delay in signal as it does not have an enable signal so it works even when the delay signal is on and does not load the instruction into the pipeline.
+-> removed all the delay in and the stall and started focus on the working on the pipeline and will worry about the pipeline hazards in the future
+-> 
