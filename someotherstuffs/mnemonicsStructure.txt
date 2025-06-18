@@ -8,7 +8,7 @@ OPCODE_STRUCTURE:   [X|X|0|0|0|0|0|#]
 					  |
 					  +-> number of immediate bytes following the opcode
 
-Types of immediate bytes:
+Types of immediate bytes (order used in the pipelineRegFormatSelector circuit): => im not good at naming circuits
 	=> immediate data:
 		structure:
 				byte_1: [-IMM-DATA-BYTE-]
@@ -17,9 +17,10 @@ Types of immediate bytes:
 		structure:
 				byte_1: [_|_|_|_|s|A|A|A]
 
-	=> immediate type:
+	=> immediate16 type:
 		structure:
-				byte_1: [-IMM-DATA-BYTE-]
+				byte_1: [-IMM-L-BYTE-]
+				byte_2: [-IMM-H-BYTE-]
 
 	=> address type:
 		structure:
