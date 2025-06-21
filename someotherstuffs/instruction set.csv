@@ -29,9 +29,9 @@ Logical C-type,ls,26,3,7
 Logical C-type,rr,27,3,9
 Logical C-type,lr,28,3,10
 General R-type,mv,29,,
-General R-type,ld,30,4,
+Load,ld,30,4,
 General R-type,ldi,31,,
-General R-type,st,32,4,
+Store,st,32,4,
 General R-type,sti,33,,
 Special R-type,lin,34,,
 Special R-type,sin,35,,

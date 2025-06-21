@@ -1,6 +1,7 @@
 import csv
 import glob
 import os
+from os.path import exists
 
 print("salutations my fellow humanoids\n")
 
@@ -58,7 +59,7 @@ def getFile(directory='Assembly_code'):
 
 def parser(lines):
     tokens = []
-    dataSection = []
+    vars = []
     is_dataLine = False
     for line in lines:
         line = line.strip()
@@ -85,7 +86,7 @@ def parser(lines):
             poss = line.find(':')
             data['identifier'] = line[:poss].strip()
             data['value'] = int(line[poss+1:].strip())
-            dataSection.append(data)
+            vars.append(data)
             continue
 
         splits = line.split()
@@ -93,10 +94,10 @@ def parser(lines):
         token['opcode'] = opcode
         token['arg1'] = arg1
         token['arg2'] = arg2
-        # throws error when there is no arg3 if there is an addr tried solving it by initially assigning it to None
         token['arg3'] = arg3
+        # throws error when there is no arg3 if there is an addr tried solving it by initially assigning it to None
         tokens.append(token)
-    return tokens, dataSection
+    return tokens, vars
 
 
 def lookup(tokens, opcodes, select, types):
@@ -108,20 +109,32 @@ def lookup(tokens, opcodes, select, types):
             bytes.append(int(token['arg3'][1:]) << 4 | int(token['arg2'][1:]))
             bytes.append(int(select[instruction]) <<
                          4 | int(token['arg1'][1:]))
-        elif type[instruction] == "General R-type":
-            bytes.append(int(token['arg1'][1:]))
+        elif types[instruction] == "Load":
             bytes.append(int(token['arg2']) & 0xff)
             bytes.append(int(token['arg2']) >> 8 & 0xff)
+            bytes.append(int(token['arg1'][1:]))
+        elif types[instruction] == "Store":
+            bytes.append(int(token['arg1']) & 0xff)
+            bytes.append(int(token['arg1']) >> 8 & 0xff)
+            bytes.append(int(token['arg2'][1:]))
     return bytes
 
 
-def generateBinary(bytes, file):
-    rom = [0x00] * 0xffff
+def generateBinary(bytes, file, vars):
+    instrMemory = [0x00] * 0xffff
+    dataMemory = [0x00] * 0xffff
     filename = file.removesuffix(".asm")
+
     for addr, byte in enumerate(bytes):
-        rom[addr] = byte
-    with open(f"Machine_code/{filename}.bin", "wb") as file:
-        file.write(bytearray(rom))
+        instrMemory[addr] = byte
+    for addr, var in enumerate(vars):
+        dataMemory[addr] = var['value']
+
+    os.makedirs(f'Machine_code/{filename}', exist_ok=True)
+    with open(f"Machine_code/{filename}/{filename}.bin", "wb") as file:
+        file.write(bytearray(instrMemory))
+    with open(f"Machine_code/{filename}/{filename}_data.bin", "wb") as file:
+        file.write(bytearray(dataMemory))
 
 
 def main():
@@ -130,13 +143,12 @@ def main():
     filePath, filename = getFile()
     inputFile = open(filePath).read()
     lines = inputFile.splitlines()
+    # in the future make it so that the identifier part is used too to address the variables
     tokens, vars = parser(lines)
-    for i in vars:
-        print(i)
     bytes = lookup(tokens, opcodes, select, types)
     for byte in bytes:
-        print(f'{byte} => {hex(byte)},{bin(byte)}')
-    generateBinary(bytes, filename)
+        print(f'{hex(byte)} => {bin(byte)}')
+    generateBinary(bytes, filename, vars)
 
 
 if __name__ == "__main__":

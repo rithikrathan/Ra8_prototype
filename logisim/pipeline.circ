@@ -4,10 +4,15 @@
 
   <lib desc="#Wiring" name="0">
     <tool name="Splitter">
-      <a name="appear" val="center"/>
-      <a name="facing" val="west"/>
-      <a name="fanout" val="3"/>
-      <a name="incoming" val="3"/>
+      <a name="bit1" val="0"/>
+      <a name="bit2" val="0"/>
+      <a name="bit3" val="0"/>
+      <a name="bit4" val="1"/>
+      <a name="bit5" val="1"/>
+      <a name="bit6" val="1"/>
+      <a name="bit7" val="1"/>
+      <a name="facing" val="south"/>
+      <a name="incoming" val="8"/>
     </tool>
     <tool name="Pin">
       <a name="appearance" val="classic"/>
@@ -50,14 +55,13 @@
       <a name="size" val="30"/>
     </tool>
     <tool name="Controlled Buffer">
-      <a name="control" val="left"/>
       <a name="facing" val="north"/>
-      <a name="width" val="8"/>
+      <a name="width" val="16"/>
     </tool>
   </lib>
   <lib desc="#Plexers" name="2">
     <tool name="Multiplexer">
-      <a name="width" val="8"/>
+      <a name="size" val="20"/>
     </tool>
   </lib>
   <lib desc="#Arithmetic" name="3"/>
@@ -595,8 +599,11 @@
       <a name="addrWidth" val="16"/>
       <a name="appearance" val="classic"/>
       <a name="contents">addr/data: 16 8
-82 10 43 8f 4e 25 91 30
-13 86 62 47
+de 0 0 1 de 1 0 2
+de 2 0 3 de 3 0 4
+de 4 0 5 de 5 0 6
+82 32 1 82 24 2 82 32
+5
 </a>
       <a name="label" val="instructionMemory"/>
       <a name="labelvisible" val="true"/>
@@ -604,7 +611,7 @@
     <comp lib="8" loc="(1430,755)" name="Text">
       <a name="text" val="PIPELINE REGISTERS "/>
     </comp>
-    <comp lib="8" loc="(1956,570)" name="Text">
+    <comp lib="8" loc="(1955,570)" name="Text">
       <a name="text" val="&lt;= dataBus "/>
     </comp>
     <comp loc="(1230,880)" name="FetchUnit"/>
@@ -1522,7 +1529,6 @@
       <a name="facing" val="west"/>
       <a name="label" val="enRegAtoDBus"/>
       <a name="output" val="true"/>
-      <a name="radix" val="16"/>
     </comp>
     <comp lib="0" loc="(1260,510)" name="Pin">
       <a name="appearance" val="NewPins"/>
