@@ -1,7 +1,6 @@
 import csv
 import glob
 import os
-from os.path import exists
 
 print("salutations my fellow humanoids\n")
 

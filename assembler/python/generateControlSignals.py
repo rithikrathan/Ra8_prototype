@@ -22,7 +22,7 @@ def getfile(directory='./Assembly_code'):
         return
 
     print('---------------------------------------------')
-    print('Choose a program to assemble:')
+    print('Choose a program to generate control signals:')
     print('---------------------------------------------')
     for i, file in enumerate(asmFiles):
         print(f'{i} => {os.path.basename(file)}')
@@ -35,7 +35,8 @@ def getfile(directory='./Assembly_code'):
             if 0 <= choice < len(asmFiles):
                 path = asmFiles[choice]
                 name = os.path.basename(path)
-                print(f'{name} will be assembled into Machine_code directory')
+                print(f'Control signals for the program {
+                      name} will be generated')
                 print('---------------------------------------------')
                 return path, name
             else:
@@ -79,7 +80,19 @@ def generateControlSignals(opcodes, id):
     controlROM = [0x00] * 64
     controlSignals = ['ALUmode', 'Cin', 'enALU', 'dload', 'dstore']
     for opcode in opcodes:
-        addr = id[opcode]
+        addr = int(id[opcode])
+        controlSignal = 0
+        print(f"For {opcode}: ")
+        print("------------------------------------------")
+        for j, i in enumerate(controlSignals):
+            val = int(input(f"Enter value for {i} (0/1): "))
+            if val:
+                controlSignal |= val << j
+        print("------------------------------------------")
+        print(bin(controlSignal))
+        controlROM[addr] = controlSignal
+        print("------------------------------------------")
+    print(controlROM)
 
 
 def main():
