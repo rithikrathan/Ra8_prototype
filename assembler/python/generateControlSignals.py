@@ -76,14 +76,17 @@ def getOpcodes(lines):
     return opcodes
 
 
-def generateControlSignals(opcodes, id):
+def generateControlSignals(opcodes, id, filename):
     controlROM = [0x00] * 64
-    controlSignals = ['ALUmode', 'Cin', 'enALU', 'dload', 'dstore']
+    selectROM = [0x00] * 64
+    controlSignals = ['ALUmode', 'Cin', 'dload', 'dstore']
+    name = filename.removesuffix('.asm')
     for opcode in opcodes:
         addr = int(id[opcode])
         controlSignal = 0
         print(f"For {opcode}: ")
         print("------------------------------------------")
+        sel = int(input("Enter pipeling register mode(0-7): "))
         for j, i in enumerate(controlSignals):
             val = int(input(f"Enter value for {i} (0/1): "))
             if val:
@@ -91,19 +94,29 @@ def generateControlSignals(opcodes, id):
         print("------------------------------------------")
         print(bin(controlSignal))
         controlROM[addr] = controlSignal
+        selectROM[addr] = sel
         print("------------------------------------------")
     print(controlROM)
+    print(selectROM)
+    os.makedirs(f'./Control_signals/{name}', exist_ok=True)
+    with open(f'./Control_signals/{name}/{name}_CS1.bin', 'wb') as file:
+        for val in controlROM:
+            file.write(val.to_bytes(2, byteorder="little"))
+    with open(f'./Control_signals/{name}/{name}_CS2.bin', 'wb') as file:
+        for val in selectROM:
+            file.write(val.to_bytes(2, byteorder="little"))
 
 
 def main():
     instrID = loadCSV('../../someotherstuffs/instruction set.csv')
-    for i, j in instrID.items():
-        print(f'{i} => {j}')
     filePath, name = getfile()
     inputFile = open(filePath).read()
     lines = inputFile.splitlines()
     opcodes = getOpcodes(lines)
-    generateControlSignals(opcodes, instrID)
+    try:
+        generateControlSignals(opcodes, instrID, name)
+    except KeyboardInterrupt:
+        print('ended')
 
 
 if __name__ == '__main__':

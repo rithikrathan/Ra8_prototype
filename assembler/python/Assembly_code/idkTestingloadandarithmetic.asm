@@ -11,13 +11,10 @@ ld r3 2
 ld r4 3
 ld r5 4
 ld r6 5
-add r1 r2 r3
-add r2 r4 r2
-add r5 r2 r3
-and r1 r2 r3
-and r2 r4 r2
-and r5 r2 r3
-mul r1 r2 r3
-mul r2 r4 r2
-mul r5 r2 r3
+st 8 r1
+st 9 r2
+st 10 r3
+st 11 r4
+st 12 r5
+st 13 r6
 
