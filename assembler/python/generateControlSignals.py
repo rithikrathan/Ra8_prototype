@@ -5,13 +5,17 @@ import os
 
 def loadCSV(csvFile):
     instructionID = {}
+    CuSelect = {}
     with open(csvFile, mode='r') as file:
         reader = csv.DictReader(file)
         for instr in reader:
             if instr['INSTRUCTION'] and instr['instrID']:
                 instruction = instr['INSTRUCTION']
                 instructionID[instruction] = instr['instrID']
-    return instructionID
+            if instr['INSTRUCTION'] and instr['Cuselect']:
+                instruction = instr['INSTRUCTION']
+                CuSelect[instruction] = instr['Cuselect']
+    return instructionID, CuSelect
 
 
 def getfile(directory='./Assembly_code'):
@@ -54,9 +58,9 @@ def getOpcodes(lines):
         line = line.strip()
 
         # handle comments
-        commentPos = line.find('#')
+        commentPos = line.find(';')
         if commentPos != -1:
-            line = line[:commentPos].stip()
+            line = line[:commentPos].strip()
 
         # handle empty lines
         if not line:
@@ -76,7 +80,7 @@ def getOpcodes(lines):
     return opcodes
 
 
-def generateControlSignals(opcodes, id, filename):
+def generateControlSignals(opcodes, id, filename, sel):
     controlROM = [0x00] * 64
     selectROM = [0x00] * 64
     controlSignals = ['ALUmode', 'Cin', 'dload', 'dstore']
@@ -86,7 +90,7 @@ def generateControlSignals(opcodes, id, filename):
         controlSignal = 0
         print(f"For {opcode}: ")
         print("------------------------------------------")
-        sel = int(input("Enter pipeling register mode(0-7): "))
+        Sel = int(sel[opcode])
         for j, i in enumerate(controlSignals):
             val = int(input(f"Enter value for {i} (0/1): "))
             if val:
@@ -94,29 +98,29 @@ def generateControlSignals(opcodes, id, filename):
         print("------------------------------------------")
         print(bin(controlSignal))
         controlROM[addr] = controlSignal
-        selectROM[addr] = sel
+        selectROM[addr] = Sel
         print("------------------------------------------")
     print(controlROM)
     print(selectROM)
     os.makedirs(f'./Control_signals/{name}', exist_ok=True)
     with open(f'./Control_signals/{name}/{name}_CS1.bin', 'wb') as file:
         for val in controlROM:
-            file.write(val.to_bytes(2, byteorder="little"))
+            file.write(val.to_bytes(2, byteorder="big"))
     with open(f'./Control_signals/{name}/{name}_CS2.bin', 'wb') as file:
         for val in selectROM:
-            file.write(val.to_bytes(2, byteorder="little"))
+            file.write(val.to_bytes(2, byteorder="big"))
 
 
 def main():
-    instrID = loadCSV('../../someotherstuffs/instruction set.csv')
+    instrID, sel = loadCSV('../../someotherstuffs/instruction set.csv')
     filePath, name = getfile()
     inputFile = open(filePath).read()
     lines = inputFile.splitlines()
     opcodes = getOpcodes(lines)
     try:
-        generateControlSignals(opcodes, instrID, name)
+        generateControlSignals(opcodes, instrID, name, sel)
     except KeyboardInterrupt:
-        print('ended')
+        print('\nended')
 
 
 if __name__ == '__main__':

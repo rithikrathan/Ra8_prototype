@@ -1,3 +1,6 @@
+"""
+RIGHT NOW THIS PROGRAM ASSUMES THE ASSEMBLY CODE IS WRITTEN IN CORRECT SYNTAX
+"""
 import csv
 import glob
 import os
@@ -5,6 +8,7 @@ import os
 print("salutations my fellow humanoids\n")
 
 
+# load the csv file and return dictionaries for instruction {instruction: opcode}  {instruction: select} {instruction: type}
 def loadCSV(csv_file):
     instructionAddr = {}
     sel = {}
@@ -24,6 +28,7 @@ def loadCSV(csv_file):
     return instructionAddr, sel, types
 
 
+# get input from the user and return the selected assembly program file
 def getFile(directory='Assembly_code'):
     asmFiles = glob.glob(directory+'/*.asm')
 
@@ -51,25 +56,53 @@ def getFile(directory='Assembly_code'):
             else:
                 print('Invalid index value')
                 print('---------------------------------------------')
-        except:
+        except:  # ignore this this is some of my stupid code idek why i did it this way
             print('index must be a number!')
             print('---------------------------------------------')
 
 
-def parser(lines):
+def parser(lines):  # lines => list of every line in the assembly program
     tokens = []
     vars = []
     is_dataLine = False
-    for line in lines:
-        line = line.strip()
+    for line in lines:  # iterate through each line in the assembly program
+        line = line.strip()  # ignore whitespaces
         token = {}
+        """
+        token = {
+                'opcode': opcode of the instruction
+                'arg1': argument1
+                'arg2': argument2
+                'arg3': argument3
+                }
+        """
         data = {}
+        """
+        NOTE:
+        data = {
+                'identifier': variableName
+                'value': -
+                'type': -
+                'address': -
+                }
+
+
+        above is the intended use of this, in the future when i add vairables to the assembly program
+        right now im just using the value to load data into the data memory
+
+        example usage in assembly code:
+            .data
+                myVal: byte 69 
+                myStr: string 'hello idiots' 
+                myArr: array  1 2 3 4 5 6 76   
+        """
 
         # handle comments
-        commentPos = line.find('#')
+        # if there is ';' in the line remove everything that follows it including the symbol itself
+        commentPos = line.find(';')
         if commentPos != -1:
             token['comment'] = line[commentPos + 1:].strip()
-            line = line[:commentPos].stip()
+            line = line[:commentPos].strip()  # remove whitespaces
 
         # handle empty lines
         if not line:
@@ -85,9 +118,11 @@ def parser(lines):
             poss = line.find(':')
             data['identifier'] = line[:poss].strip()
             data['value'] = int(line[poss+1:].strip())
+            # add thes data dict to the list of all variable dictionaries
             vars.append(data)
             continue
 
+        # handle instructions
         splits = line.split()
         opcode, arg1, arg2, arg3 = (splits + [None] * 4)[:4]
         token['opcode'] = opcode
@@ -95,7 +130,7 @@ def parser(lines):
         token['arg2'] = arg2
         token['arg3'] = arg3
         # throws error when there is no arg3 if there is an addr tried solving it by initially assigning it to None
-        tokens.append(token)
+        tokens.append(token)  # add this token dict to the list of all tokens
     return tokens, vars
 
 
@@ -104,7 +139,7 @@ def lookup(tokens, opcodes, select, types):
     for token in tokens:
         instruction = token['opcode']
         bytes.append(opcodes[instruction])
-        if types[instruction] == "Arithmetic C-type":
+        if types[instruction] == "Arithmetic C-type" or types[instruction] == "Logical C-type":
             bytes.append(int(token['arg3'][1:]) << 4 | int(token['arg2'][1:]))
             bytes.append(int(select[instruction]) <<
                          4 | int(token['arg1'][1:]))
@@ -116,6 +151,8 @@ def lookup(tokens, opcodes, select, types):
             bytes.append(int(token['arg1']) & 0xff)
             bytes.append(int(token['arg1']) >> 8 & 0xff)
             bytes.append(int(token['arg2'][1:]))
+        elif types[instruction] == "Move":
+            bytes.append(int(token['arg1'][1:]) << 4 | int(token['arg2'][1:]))
     return bytes
 
 
@@ -145,8 +182,6 @@ def main():
     # in the future make it so that the identifier part is used too to address the variables
     tokens, vars = parser(lines)
     bytes = lookup(tokens, opcodes, select, types)
-    for byte in bytes:
-        print(f'{hex(byte)} => {bin(byte)}')
     generateBinary(bytes, filename, vars)
 
 

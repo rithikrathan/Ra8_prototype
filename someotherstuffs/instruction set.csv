@@ -1,4 +1,4 @@
-TYPE,INSTRUCTION,instrID,SIZE,select,Cuselect 
+TYPE,INSTRUCTION,instrID,SIZE,select,Cuselect
 S-type,nope,0,1,,
 S-type,halt,1,1,,
 Arithmetic C-type,add,2,3,0,0
@@ -28,7 +28,7 @@ Logical C-type,rs,25,3,8,0
 Logical C-type,ls,26,3,7,0
 Logical C-type,rr,27,3,9,0
 Logical C-type,lr,28,3,10,0
-General R-type,mv,29,,,
+Move,mv,29,2,,3
 Load,ld,30,4,,1
 General R-type,ldi,31,,,
 Store,st,32,4,,2
