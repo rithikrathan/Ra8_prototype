@@ -92,16 +92,15 @@ def parser(lines):  # lines => list of every line in the assembly program
 
         example usage in assembly code:
             .data
-                myVal: byte 69 
-                myStr: string 'hello idiots' 
-                myArr: array  1 2 3 4 5 6 76   
+                myVal: byte 69
+                myStr: string 'hello idiots'
+                myArr: array  1 2 3 4 5 6 76
         """
 
         # handle comments
         # if there is ';' in the line remove everything that follows it including the symbol itself
         commentPos = line.find(';')
         if commentPos != -1:
-            token['comment'] = line[commentPos + 1:].strip()
             line = line[:commentPos].strip()  # remove whitespaces
 
         # handle empty lines
@@ -141,8 +140,8 @@ def lookup(tokens, opcodes, select, types):
         bytes.append(opcodes[instruction])
         if types[instruction] == "Arithmetic C-type" or types[instruction] == "Logical C-type":
             bytes.append(int(token['arg3'][1:]) << 4 | int(token['arg2'][1:]))
-            bytes.append(int(select[instruction]) <<
-                         4 | int(token['arg1'][1:]))
+            byte2 = int(select[instruction]) << 4 | int(token['arg1'][1:])
+            bytes.append(byte2)
         elif types[instruction] == "Load":
             bytes.append(int(token['arg2']) & 0xff)
             bytes.append(int(token['arg2']) >> 8 & 0xff)

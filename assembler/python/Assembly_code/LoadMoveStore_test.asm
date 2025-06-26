@@ -17,8 +17,8 @@ ld r5 4
 ld r6 5
 
 ; move the register contents of r1 to all other registers r2 - r6 
-mv r2 r3
-mv r1 r2
+mv r2 r1
+mv r3 r2
 mv r4 r3
 mv r5 r4
 mv r6 r5

@@ -100,8 +100,6 @@ def generateControlSignals(opcodes, id, filename, sel):
         controlROM[addr] = controlSignal
         selectROM[addr] = Sel
         print("------------------------------------------")
-    print(controlROM)
-    print(selectROM)
     os.makedirs(f'./Control_signals/{name}', exist_ok=True)
     with open(f'./Control_signals/{name}/{name}_CS1.bin', 'wb') as file:
         for val in controlROM:
@@ -109,6 +107,9 @@ def generateControlSignals(opcodes, id, filename, sel):
     with open(f'./Control_signals/{name}/{name}_CS2.bin', 'wb') as file:
         for val in selectROM:
             file.write(val.to_bytes(2, byteorder="big"))
+
+    print(f"Generated control signals at ./Control_signals/{name}/")
+    print("------------------------------------------")
 
 
 def main():
