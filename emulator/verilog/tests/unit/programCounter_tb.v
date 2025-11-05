@@ -19,7 +19,7 @@ module programCounter_tb;
   always #5 clk = ~clk;
 
   initial begin
-    $dumpfile("dump.vcd");
+    $dumpfile("build/vcd/dump.vcd");
     $dumpvars(0, programCounter_tb);
 
     reset  = 0;

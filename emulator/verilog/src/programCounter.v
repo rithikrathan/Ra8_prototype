@@ -8,7 +8,7 @@ module programCounter (
 );
   always @(posedge clk or posedge reset) begin
     if (reset) pc <= 16'b0;
-    else if (load) pc <= inAddr;
+    else if (load && enable) pc <= inAddr;
     else if (enable) pc <= pc + 1;
   end
 endmodule

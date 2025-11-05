@@ -1,36 +1,75 @@
-# === Directories ===
-COMP_DIR = components
-CIRC_DIR = circuits
+# ==========================
+# Directory setup
+# ==========================
+SRC_DIR      := src
+PROC_DIR     := processor
+TEST_DIR     := tests
+UNIT_DIR     := $(TEST_DIR)/unit
+INT_DIR      := $(TEST_DIR)/integration
+BUILD_DIR    := build
+VVP_DIR      := $(BUILD_DIR)/vvp
+VCD_DIR      := $(BUILD_DIR)/vcd
+LOG_DIR      := $(BUILD_DIR)/logs
 
-# === Tools ===
-IVERILOG = iverilog
-VVP = vvp
-GTKWAVE = gtkwave
+# Tools
+IVERILOG     := iverilog
+VVP          := vvp
+GTKWAVE      := gtkwave
 
-# === Files ===
-COMP_SRCS = $(wildcard $(COMP_DIR)/*.v)
+# Make sure build dirs exist
+$(shell mkdir -p $(VVP_DIR) $(VCD_DIR) $(LOG_DIR))
 
-# === Default target ===
-all:
-	@echo "Usage:"
-	@echo "  make comp        → compile all component files"
-	@echo "  make <name>      → build & run circuits/<name>.v + <name>_tb.v"
-	@echo "Example: make alu"
+# ==========================
+# Handle test name
+# ==========================
+TEST := $(word 2, $(MAKECMDGOALS))
 
-# === Compile only components ===
-comp:
-	@echo "Compiling all components..."
-	@$(IVERILOG) -o build_components $(COMP_SRCS)
-	@echo "Done."
-
-# === Pattern rule for circuit test ===
+# Ignore extra args (like the test name)
 %:
-	@echo "Building and simulating $@..."
-	@$(IVERILOG) -o build_$@ $(COMP_SRCS) $(CIRC_DIR)/$@.v $(CIRC_DIR)/$@_tb.v
-	@$(VVP) build_$@
-	@$(GTKWAVE) dump.vcd &
+	@:
 
-# === Clean ===
+# ==========================
+# Rules
+# ==========================
+
+# ----------- UNIT TESTS -----------
+unit:
+	@if [ -z "$(TEST)" ]; then \
+		echo "Usage: make unit <testname>"; exit 1; \
+	fi; \
+	echo "▶ Running unit test: $(TEST)"; \
+	$(IVERILOG) -o $(VVP_DIR)/$(TEST).vvp $(UNIT_DIR)/$(TEST)_tb.v $(SRC_DIR)/*.v; \
+	$(VVP) $(VVP_DIR)/$(TEST).vvp > $(LOG_DIR)/$(TEST).log; \
+	echo "✔ $(TEST) done."
+
+# ----------- INTEGRATION TESTS -----------
+integrate:
+	@if [ -z "$(TEST)" ]; then \
+		echo "Usage: make integrate <testname>"; exit 1; \
+	fi; \
+	echo "▶ Running integration test: $(TEST)"; \
+	# $(IVERILOG) -o $(VVP_DIR)/$(TEST).vvp $(INT_DIR)/$(TEST)_tb.v $(SRC_DIR)/*.v $(PROC_DIR)/*.v; \
+	$(IVERILOG) -o $(VVP_DIR)/$(TEST).vvp $(INT_DIR)/$(TEST)_tb.v $(SRC_DIR)/*.v; \
+	$(VVP) $(VVP_DIR)/$(TEST).vvp > $(LOG_DIR)/$(TEST).log; \
+	echo "✔ $(TEST) done."
+
+# ----------- BUILD PROCESSOR -----------
+build:
+	@echo "🔧 Building processor..."
+	$(IVERILOG) -o $(VVP_DIR)/processor.vvp $(PROC_DIR)/*.v $(SRC_DIR)/*.v
+	@echo "✅ Processor build complete."
+
+# ----------- RUN / WAVE / CLEAN -----------
+run:
+	@echo "▶ Running last build..."
+	$(VVP) $(VVP_DIR)/processor.vvp
+
+wave:
+	@$(GTKWAVE) $(VCD_DIR)/*.vcd &
+
 clean:
-	rm -f build_* dump.vcd
+	rm -rf $(BUILD_DIR)/*
+	@echo "🧹 Clean done."
+
+.PHONY: unit integrate build run wave clean
 
