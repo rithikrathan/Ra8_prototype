@@ -1,0 +1,27 @@
+#!/bin/bash
+
+SESSION="Ra8_prototype"
+ROOT_DIR="$(pwd)"
+
+# dirs to ignore
+IGNORE_DIRS=("examples" ".git" "libraries" "modes" "reference" "templates" )
+PATTERN=$(IFS="|"; echo "${IGNORE_DIRS[*]}")
+
+TARGET_DIR=$(find "$ROOT_DIR" -mindepth 1 -maxdepth 2 -type d \
+    | grep -Ev "/($PATTERN)(/|$)" \
+    | fzf)
+
+[ -z "$TARGET_DIR" ] && exit 1
+
+tmux kill-session -t $SESSION 2>/dev/null
+
+# editor window
+tmux new-session -d -s $SESSION -n "editor" -c "$TARGET_DIR"
+tmux send-keys -t $SESSION:editor "nvim ." C-m
+
+# shell window
+tmux new-window -t $SESSION -n "shell" -c "$TARGET_DIR"
+
+tmux select-window -t $SESSION:editor
+tmux attach-session -t $SESSION
+

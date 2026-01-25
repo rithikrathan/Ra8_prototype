@@ -1,0 +1,61 @@
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ARITHMETIC OPERATIONS: (not mentioning the immediate versions of each operations)
+
+modebit = 1
+
+	> addition
+	> addition with carry
+	> addition with immediate
+	> subtraction
+	> subtraction with borrow
+	> subtraction with immediate
+	> [macro] multiplication low_byte
+	> [macro] multiplication high_byte
+	> [macro] division 
+	> [macro] reminder 
+	> arithmetic right shift 
+	> compare
+	> increment 
+	> decrement 
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+LOGICAL OPERATIONS:
+modebit = 0
+
+	> and  
+	> or  
+	> not  
+	> xor  
+	> buffer A
+	> buffer B
+	> logic right rotate 
+	> logic left rotate 
+	> logic right shift 
+	> logic left shift 
+	> all zeros
+	> all ones 
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+Handle flags: 
+	inputs: Ain and Bin
+	outputs: Result
+
+[S|-|OV|C|AC|-|P|Z]
+[7 6  5 4  3   1 0]
+
+	> sign = result[7]
+	> zero = result == 0 ? 1:0 
+	> eqality = Ain == Bin ? 1:0
+	> parity = ^Result 
+	> carry = Result > 255 ? 1:0
+	> overflow = (Ain[7] == Bin[7]) AND (Result[7] != Ain[7])
+	> auxillary carry = ((Ain ^ Bin ^ Result) & 0x10) >> 4
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+problems??:
+
+	> Immediate instructions [done]
+

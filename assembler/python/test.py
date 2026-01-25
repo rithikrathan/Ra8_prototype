@@ -1,2 +1,0 @@
-print(int(0xf) <<
-      4 | int(0xf))
