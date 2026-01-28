@@ -22,6 +22,10 @@ tmux send-keys -t $SESSION:editor "nvim ." C-m
 # shell window
 tmux new-window -t $SESSION -n "shell" -c "$TARGET_DIR"
 
+# shell window
+tmux new-window -t $SESSION -n "opencode" -c "$TARGET_DIR"
+tmux send-keys -t $SESSION:opencode "opencode" C-m
+
 tmux select-window -t $SESSION:editor
 tmux attach-session -t $SESSION
 
