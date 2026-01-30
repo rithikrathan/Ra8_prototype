@@ -6,12 +6,12 @@ import (
 )
 
 // =-=-=-=-=-=-=[DEFINE NECESSARY THINGS]=-=-=-=-=-=-
-
 // flags struct
 type Flags uint8
 
 const (
 	// [S|-|OV|C|AC|-|P|Z]
+	// wait is the flags set to 1 when it is initialised?
 	Zero Flags = 1 << iota // bit 0 == Zero flag
 	Parity
 	Halted
@@ -23,51 +23,46 @@ const (
 )
 
 func HandleFlags(f *Flags, a, b, result byte) {
-	// Reset flags to 0 before calculating new state
-	*f = 0
+	*f = 0 // Reset flags to 0 before calculating new state
 
-	// Zero Flag (Z): Result is 0
 	if result == 0 {
 		*f |= Zero
-	}
+	} // Zero Flag (Z): Result is 0
 
-	// Sign Flag (S): Bit 7 is set (negative in two's complement)
 	if result&0x80 != 0 {
 		*f |= Sign
-	}
+	} // Sign Flag (S): Bit 7 is set (negative in two's complement)
 
-	// Carry Flag (C): Unsigned overflow (sum > 255)
 	if uint16(a)+uint16(b) > 0xFF {
 		*f |= Carry
-	}
+	} // Carry Flag (C): Unsigned overflow (sum > 255)
 
-	// Auxiliary Carry (AC): Carry from bit 3 to bit 4 (nibble carry)
 	if (a&0x0F)+(b&0x0F) > 0x0F {
 		*f |= AuxCarry
-	}
+	} // Auxiliary Carry (AC): Carry from bit 3 to bit 4 (nibble carry)
 
-	// Parity Flag (P): Set if the number of set bits is even
 	p := result
 	p ^= p >> 4
 	p ^= p >> 2
 	p ^= p >> 1
 	if (p & 1) == 0 {
 		*f |= Parity
-	}
+	} // Parity Flag (P): Set if the number of set bits is even
 
-	// Overflow Flag (OV): Signed overflow
-	// Logic: If both inputs have the same sign, but the result has a different sign
 	if ((a ^ result) & (b ^ result) & 0x80) != 0 {
+		// Logic: If both inputs have the same sign, but the result has a different sign
 		*f |= Overflow
-	}
+	} // Overflow Flag (OV): Signed overflow
+
 }
 
-unc (s Flags) String() string {
+func (s Flags) String() string {
 	if s == 0 {
 		return "None"
 	}
 
 	var names []string
+
 	if s&Zero != 0 {
 		names = append(names, "Zero")
 	}
@@ -103,8 +98,9 @@ type Ra8 struct {
 	A, B, C, D, E, F, G, H byte `json:"gp_registers"`
 
 	temph, templ byte `json:"temp_registers"`
-	// temph and templ are multiplexers that feed high and low bytes 
-	//of pc to databus used in place of registers
+
+	//NOTE: temph and templ are multiplexers that feed high and low bytes
+	//		of pc to databus used in place of registers
 
 	// Special purpose registers
 	ProgramCounter   uint16 `json:"program_counter"`
@@ -124,28 +120,31 @@ type Ra8 struct {
 	PipelineReg2        byte `json:"pipeline_reg_2"`
 	PipelineReg3        byte `json:"pipeline_reg_3"`
 	opcode              int  // internal field for decoded opcode
+	isBranching         int  // internal field for branch instruction flag
 }
 
-// NewRa8 creates a new Ra8 processor with default values
+// some kind of constructor or something that initializes it
 func NewRa8() Ra8 {
 	return Ra8{
 		StackPointer: 0xFFFF, // Stack starts at top of memory
 	}
 }
 
+// =-=-=-=-=-=-=[EXECUTION CYCLE]=-=-=-=-=-=-
+
+// NOTE: in this single step method, the fetch decode and execute cycle programs here do not implement
+// their movement in the pipeline as ILP is only necessary when implementing in
+// hardware and im lazy to implement in the emulator, its useless anyways
 func (p *Ra8) Step() int {
-	if !p.StatusWord[Halted]{
+	//composition of a single execution cycle
+	if !p.StatusWord[Halted] {
 		p.Fetch()
 		p.Decode()
 		p.Execute()
-	}else {
+	} else {
 		return 1 // satus code to check if the processor halted
 	}
 }
-
-//NOTE: the fetch decode and execute cycle programs here do not implement
-// their movement in the pipeline as ILP is only necessary when implementing in 
-// hardware and im lazy to implement in the emulator, its useless anyways
 
 func (p *Ra8) Fetch() {
 	p.InstructionRegister = p.InstructionMemory[p.ProgramCounter]
@@ -153,11 +152,13 @@ func (p *Ra8) Fetch() {
 }
 
 func (p *Ra8) Decode() {
+
 	// 11000000 - mask to get the number of immediate bytes
 	// 00000001 - mask to check if the instruction is a branching type
 	// 00111110 - mask get the opcode
-	numImm := (p.InstructionRegister >> 6) & 0x03       // Extract bits 7-6
-	p.opcode = int((p.InstructionRegister >> 1) & 0x1F) // Extract bits 5-1
+
+	numImm := p.InstructionRegister & 0b11000000       // Extract bits 7-6 (Number of immediate bytes following this opcode)
+	p.opcode = int(p.InstructionRegister & 0b00111110) // Extract bits 5-1 (OPCODE)
 
 	//TODO: refactor this hardcoded thing if you want to
 	switch numImm {
@@ -181,73 +182,70 @@ func (p *Ra8) Decode() {
 
 	default:
 		println("owned by skill issue; invalid number of immediate bytes")
-
 	}
-
-	// isBranching := b & 0x01   // Extract bit 0
 
 	return
 
 }
 
-//TODO: make a proper instruction set table and proceed 
+// TODO: make a proper instruction set table and proceed
 func (p *Ra8) Execute() {
+	if p.opcode == 0 {
+		// NOPE instruction
+	} else if p.opcode == 1 {
+		// HALT instruction
+		p.StatusWord[Halted] = 1
+	} else if p.opcode == 2 {
+		// ADD instruction
+	} else if p.opcode == 3 {
+		// ADI instruction
+	} else if p.opcode == 4 {
+		// ADC instruction
+	} else if p.opcode == 5 {
+		// xx instruction
+	}
+
+}
+
+// =-=-=-=-=-=-=[HELPERS]=-=-=-=-=-=-
+
+// Initialize helper maps for Ra8
+func (p *Ra8) registerPointers() []*byte {
+	return []*byte{
+		&p.A, &p.B, &p.C, &p.D,
+		&p.E, &p.F, &p.G, &p.H,
+	}
+}
+
+// Get register Name by index like what the fuck do you think these do bro
+func (p *Ra8) GetRegisterName(index int) string {
+	names := []string{"A", "B", "C", "D", "E", "F", "G", "H"}
+	if index < 0 || index > 7 {
+		panic("owned by skill issue, invalid register index")
+	}
+	return names[index]
+}
+
+// Get register value by index
+func (p *Ra8) GetRegisterValue(index int) byte {
+	if index < 0 || index > 7 {
+		panic("invalid register index")
+	}
+	return *p.registerPointers()[index]
+}
+
+// Set register value by index
+func (p *Ra8) SetRegisterValue(index int, value byte) {
+	if index < 0 || index > 7 {
+		panic("invalid register index")
+	}
+	*p.registerPointers()[index] = value
 }
 
 // =-=-=-=-=-=-=[AI GENERATED]=-=-=-=-=-=-
 
-// GetRegisterValue returns the value of a register by index (0=A, 1=B, 2=C, etc.)
-func (p *Ra8) GetRegisterValue(regIndex byte) byte {
-	switch regIndex {
-	case 0:
-		return p.A
-	case 1:
-		return p.B
-	case 2:
-		return p.C
-	case 3:
-		return p.D
-	case 4:
-		return p.E
-	case 5:
-		return p.F
-	case 6:
-		return p.G
-	case 7:
-		return p.H
-	default:
-		println("owned by skill issue; invalid Register selection")
-		return 0
-	}
-}
-
-// GetRegisterName returns the name of a register by index
-func (p *Ra8) GetRegisterName(regIndex byte) string {
-	switch regIndex {
-	case 0:
-		return "A"
-	case 1:
-		return "B"
-	case 2:
-		return "C"
-	case 3:
-		return "D"
-	case 4:
-		return "E"
-	case 5:
-		return "F"
-	case 6:
-		return "G"
-	case 7:
-		return "H"
-	default:
-		println("owned by skill issue; invalid register index")
-		return "INVALID"
-	}
-}
-
-// ReadPipelineRegisters reads and displays pipeline register values based on format type
-func (p *Ra8) ReadPipelineRegisters(formatType string) {
+// getOperands() reads and displays pipeline register values based on format type
+func (p *Ra8) getOperands(formatType string) {
 	switch formatType {
 	case "immediate data":
 		fmt.Printf("Immediate Data: 0x%02X\n", p.PipelineReg1)
@@ -256,7 +254,6 @@ func (p *Ra8) ReadPipelineRegisters(formatType string) {
 		regIndex := p.PipelineReg1 & 0x07
 		regValue := p.GetRegisterValue(regIndex)
 		regName := p.GetRegisterName(regIndex)
-		fmt.Printf("Register (AAA=%d): %s = 0x%02X\n", regIndex, regName, regValue)
 
 	case "immediate16 type":
 		value := uint16(p.PipelineReg1) | (uint16(p.PipelineReg2) << 8)
@@ -294,3 +291,40 @@ func (p *Ra8) ReadPipelineRegisters(formatType string) {
 		fmt.Printf("Unknown format type: %s\n", formatType)
 	}
 }
+
+// =-=-=-=-=-=-=[EVEN MORE AI GENERATED]=-=-=-=-=-=-
+// Initialize helper maps for Ra8
+// func (p *Ra8) registerPointers() []*byte {
+// 	return []*byte{
+// 		&p.A, &p.B, &p.C, &p.D,
+// 		&p.E, &p.F, &p.G, &p.H,
+// 	}
+// }
+// Map register names to index
+// func (p *Ra8) registerNameToIndex() map[string]int {
+// 	return map[string]int{
+// 		"A": 0, "B": 1, "C": 2, "D": 3,
+// 		"E": 4, "F": 5, "G": 6, "H": 7,
+// 	}
+// }
+
+// Get register value by name
+// func (p *Ra8) GetRegisterValueByName(name string) (byte, error) {
+// 	idxMap := p.registerNameToIndex()
+// 	index, ok := idxMap[name]
+// 	if !ok {
+// 		return 0, fmt.Errorf("invalid register name: %s", name)
+// 	}
+// 	return p.GetRegisterValue(index), nil
+// }
+
+// Set register value by name
+// func (p *Ra8) SetRegisterValueByName(name string, value byte) error {
+// 	idxMap := p.registerNameToIndex()
+// 	index, ok := idxMap[name]
+// 	if !ok {
+// 		return fmt.Errorf("invalid register name: %s", name)
+// 	}
+// 	p.SetRegisterValue(index, value)
+// 	return nil
+// }
