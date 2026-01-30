@@ -100,7 +100,11 @@ unc (s Flags) String() string {
 // main processor struct
 type Ra8 struct {
 	// General purpose registers
-	A, B, C, D, E, F, G, H byte `json:"registers"`
+	A, B, C, D, E, F, G, H byte `json:"gp_registers"`
+
+	temph, templ byte `json:"temp_registers"`
+	// temph and templ are multiplexers that feed high and low bytes 
+	//of pc to databus used in place of registers
 
 	// Special purpose registers
 	ProgramCounter   uint16 `json:"program_counter"`
@@ -129,13 +133,23 @@ func NewRa8() Ra8 {
 	}
 }
 
-func (p *Ra8) Step() {
+func (p *Ra8) Step() int {
+	if !p.StatusWord[Halted]{
+		p.Fetch()
+		p.Decode()
+		p.Execute()
+	}else {
+		return 1 // satus code to check if the processor halted
+	}
 }
 
-func (p *Ra8) Fetch() byte {
-	instruction := p.InstructionMemory[p.ProgramCounter]
+//NOTE: the fetch decode and execute cycle programs here do not implement
+// their movement in the pipeline as ILP is only necessary when implementing in 
+// hardware and im lazy to implement in the emulator, its useless anyways
+
+func (p *Ra8) Fetch() {
+	p.InstructionRegister = p.InstructionMemory[p.ProgramCounter]
 	p.ProgramCounter++
-	return instruction
 }
 
 func (p *Ra8) Decode() {
@@ -176,6 +190,7 @@ func (p *Ra8) Decode() {
 
 }
 
+//TODO: make a proper instruction set table and proceed 
 func (p *Ra8) Execute() {
 }
 
