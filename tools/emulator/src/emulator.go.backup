@@ -1,5 +1,5 @@
 package main
-
+ 
 import (
 	"fmt"
 	"strings"
@@ -98,7 +98,7 @@ type Ra8 struct {
 
 	Temph, Templ byte `json:"temp_registers"`
 
-	//NOTE: temph and templ are multiplexers that feed high and low bytes
+	//NOTE: temph and templ are multiplexers that feed high and low bytes 
 	//		of pc to databus used in place of registers
 	// 		edit: me from the future no thise are special registers now that work just like
 	// 		regular rgisters but cannot be used to perfom ALU operations
@@ -133,16 +133,16 @@ func NewRa8() Ra8 {
 
 // =-=-=-=-=-=-=[EXECUTION CYCLE]=-=-=-=-=-=-
 
-// NOTE: in this single step method, the fetch decode and execute cycle programs here do not implement
-// their movement in the pipeline, as ILP is only necessary when implementing in
+//NOTE: in this single step method, the fetch decode and execute cycle programs here do not implement
+// their movement in the pipeline, as ILP is only necessary when implementing in 
 // hardware and im lazy to implement in the emulator, its useless anyways
 func (p *Ra8) Step() int {
 	//composition of a single execution cycle
-	if !p.StatusWord[Halted] {
+	if !p.StatusWord[Halted]{
 		p.Fetch()
 		p.Decode()
 		p.Execute()
-	} else {
+	}else {
 		return 1 // satus code to check if the processor halted
 	}
 }
@@ -158,8 +158,8 @@ func (p *Ra8) Decode() {
 	// 00000001 - mask to check if the instruction is a branching type
 	// 00111110 - mask get the opcode
 
-	numImm := p.InstructionRegister & 0b11000000           // Extract bits 7-6 (Number of immediate bytes following this opcode)
-	p.opcode = int(p.InstructionRegister & 0b00011111)     // Extract bits 5-1 (OPCODE)
+	numImm := p.InstructionRegister & 0b11000000       // Extract bits 7-6 (Number of immediate bytes following this opcode)
+	p.opcode = int(p.InstructionRegister & 0b00011111) // Extract bits 5-1 (OPCODE)
 	p.isBranching = int(p.InstructionRegister & 0b0010000) // see if its a branching instruction
 
 	//TODO: refactor this hardcoded thing if you want to
@@ -188,18 +188,18 @@ func (p *Ra8) Decode() {
 	return
 }
 
-// TODO: make a proper instruction set table and proceed
+
+//TODO: make a proper instruction set table and proceed 
 func (p *Ra8) Execute() {
 	// CONTROL INSTRUCTIONS
-	if p.opcode == 0 {
+	if p.opcode == 0{
 		// NOPE instruction
-	} else if p.opcode == 1 {
+	} else if p.opcode == 1{
 		// HALT instruction
-		//FIX: this
 		p.StatusWord[Halted] = 1
 
-		// ARITHMETIC INSTRUCTIONS
-	} else if p.opcode == 2 {
+	// ARITHMETIC INSTRUCTIONS
+	} else if p.opcode == 2{
 		// ADD instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
@@ -207,7 +207,7 @@ func (p *Ra8) Execute() {
 		result := a_val + b_val
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
-	} else if p.opcode == 3 {
+	} else if p.opcode == 3{
 		// ADI instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
@@ -215,7 +215,9 @@ func (p *Ra8) Execute() {
 		result := a_val + imm_val
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
-	} else if p.opcode == 4 {
+	}
+
+} else if p.opcode == 4{
 		// ADC instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
@@ -223,7 +225,7 @@ func (p *Ra8) Execute() {
 		result := a_val + b_val + 1
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
-	} else if p.opcode == 5 {
+} else if p.opcode == 5{
 		// SUB instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
@@ -231,7 +233,7 @@ func (p *Ra8) Execute() {
 		result := a_val - b_val
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
-	} else if p.opcode == 6 {
+	} else if p.opcode == 6{
 		// SUI instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
@@ -239,8 +241,9 @@ func (p *Ra8) Execute() {
 		result := a_val - imm_val
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
+	}
 
-	} else if p.opcode == 7 {
+	} else if p.opcode == 7{
 		// SBB instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
@@ -248,7 +251,7 @@ func (p *Ra8) Execute() {
 		result := a_val - b_val - 1
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
-	} else if p.opcode == 8 {
+	} else if p.opcode == 8{
 		// MUL instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
@@ -256,6 +259,7 @@ func (p *Ra8) Execute() {
 		result := (a_val * b_val) & 0x00ff
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
+	}
 
 	} else if p.opcode == 9 {
 		// MUH instruction
@@ -265,20 +269,21 @@ func (p *Ra8) Execute() {
 		result := (a_val * b_val) & 0xff00
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
-	} else if p.opcode == 10 {
+	} else if p.opcode == 10{
 		// MIL instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
-		imm_val := operands.Imm
+		imm_val:= operands.Imm
 		result := (a_val * imm_val) & 0x00ff
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
+	}
 
-	} else if p.opcode == 11 {
+	} else if p.opcode == 11{
 		// MIH instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
-		imm_val := operands.Imm
+		imm_val:= operands.Imm
 		result := (a_val * imm_val) & 0xff
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
@@ -290,12 +295,13 @@ func (p *Ra8) Execute() {
 		result := (a_val / b_val) & 0xff
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
+	}
 
-	} else if p.opcode == 13 {
+	} else if p.opcode == 13{
 		// DII instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
-		imm_val := operands.Imm
+		imm_val:= operands.Imm
 		result := (a_val / imm_val) & 0xff00
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
@@ -307,101 +313,105 @@ func (p *Ra8) Execute() {
 		result := (a_val % b_val) & 0xff
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
-	} else if p.opcode == 15 {
+	} else if p.opcode == 15{
 		// REI instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
-		imm_val := operands.Imm
+		imm_val:= operands.Imm
 		result := (a_val % imm_val) & 0xff
 		p.SetRegisterValue(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
+	}
 
-		// NEG instruction here
+	// NEG instruction here 
 
-		// LOGICAL INSTRUCTIONS
-	} else if p.opcode == 16 {
+	// LOGICAL INSTRUCTIONS
+	} else if p.opcode == 16{
 		// AND instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
 		b_val := p.GetRegisterValue(operands.B)
 		result := a_val & b_val
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 17 {
+	} else if p.opcode == 17{
 		// ANI instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
 		imm_val := operands.Imm
 		result := a_val & imm_val
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 18 {
+	} else if p.opcode == 18{
 		// OR instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
 		b_val := p.GetRegisterValue(operands.B)
 		result := a_val | b_val
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 19 {
+	} else if p.opcode == 19{
 		// ORI instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
 		imm_val := operands.Imm
 		result := a_val | imm_val
 		p.SetRegisterValue(operands.Res, result)
+	}
 
-	} else if p.opcode == 20 {
+	} else if p.opcode == 20{
 		// NOT instruction
 		operands := p.getOperands(3)
 		a_val := p.GetRegisterValue(operands.A)
-		result := ^a_val
+		result := ^a_val 
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 21 {
+	} else if p.opcode == 21{
 		// NOI instruction
 		operands := p.getOperands(4)
-		imm_val := operands.Imm
+		imm_val:= operands.Imm
 		result := ^imm_val
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 22 {
+	} else if p.opcode == 22{
 		// XOR instruction
 		operands := p.getOperands(1)
 		a_val := p.GetRegisterValue(operands.A)
 		b_val := p.GetRegisterValue(operands.B)
 		result := a_val ^ b_val
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 23 {
+	} else if p.opcode == 23{
 		// XRI instruction
 		operands := p.getOperands(2)
 		a_val := p.GetRegisterValue(operands.A)
 		imm_val := operands.Imm
 		result := a_val ^ imm_val
 		p.SetRegisterValue(operands.Res, result)
+	}
 
-		// BITWISE INSTRUCTIONS
-	} else if p.opcode == 24 {
+	// BITWISE INSTRUCTIONS
+	} else if p.opcode == 24{
 		// RS instruction
 		operands := p.getOperands(3)
 		a_val := p.GetRegisterValue(operands.A)
 		result := a_val >> 1
 		p.SetRegisterValue(operands.Res, result)
+	}
 
-	} else if p.opcode == 25 {
+	} else if p.opcode == 25{
 		// LS instruction
 		operands := p.getOperands(3)
 		a_val := p.GetRegisterValue(operands.A)
 		result := a_val << 1
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 26 {
+	} else if p.opcode == 26{
 		// RR instruction
 		operands := p.getOperands(3)
 		a_val := p.GetRegisterValue(operands.A)
-		result := ((a_val >> 1) | (a_val << 7)) & 0xff
+		result := ((a_val >> 1)|(a_val << 7)) & 0xff
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 27 {
+	} else if p.opcode == 27{
 		// LR instruction
 		operands := p.getOperands(3)
 		a_val := p.GetRegisterValue(operands.A)
-		result := ((a_val << 1) | (a_val >> 7)) & 0xff
+		result := ((a_val << 1)|(a_val >> 7)) & 0xff
 		p.SetRegisterValue(operands.Res, result)
-	} else if p.opcode == 28 {
+	} else if p.opcode == 28{
 		// ARS instruction
 		operands := p.getOperands(3)
 		a_val := p.GetRegisterValue(operands.A)
@@ -410,30 +420,32 @@ func (p *Ra8) Execute() {
 		val := (lower7bits >> 1) & 0x7f
 		result := msb | val
 		p.SetRegisterValue(operands.Res, result)
+	}
+	 
+	//MEM INSTRUCTIONS
 
-		//MEM INSTRUCTIONS
-
-	} else if p.opcode == 29 {
+	} else if p.opcode == 29{
 		// MV instruction A <= B
 		operands := p.getOperands(5)
-		p.SetRegisterValue(operands.Res, p.GetRegisterValue(operands.A))
-	} else if p.opcode == 30 {
+		p.SetRegisterValue(operands.Res,p.GetRegisterValue(operands.A))
+	} else if p.opcode == 30{
 		// LD instruction A <= Value in memory location
 		operands := p.getOperands(6)
-		p.SetRegisterValue(operands.A, p.data_memory[operands.Addr])
-	} else if p.opcode == 31 {
+		p.SetRegisterValue(operands.A,p.data_memory[operands.Addr])
+	} else if p.opcode == 31{
 		// LDI instruction A <= Value in memory location
 		operands := p.getOperands(7)
 		p.SetRegisterValue(p.data_memory[operands.Imm])
-	} else if p.opcode == 32 {
+	} else if p.opcode == 32{
 		// xx instruction
 	}
+}
 }
 
 // =-=-=-=-=-=-=[HELPERS]=-=-=-=-=-=-
 // getOperands
-// type 1 =>  reg a,  b, res
-func (p *Ra8) getOperands(instructionType int) map[string]interface{} {
+// type 1 =>  reg a,  b, res 
+func (p *Ra8) getOperands(instructionType int) map[string]interface{}{
 	result := make(map[string]interface{})
 
 	switch instructionType {
@@ -442,7 +454,7 @@ func (p *Ra8) getOperands(instructionType int) map[string]interface{} {
 		// pipeline reg 1: a4 b4
 		// pipeline reg 2: ---- res4
 		result["A"] := p.PipelineReg1 & 0x07
-		result["B"] := (p.PipelineReg1 >> 4) & 0x07
+		result["B"] := (p.PipelineReg1 >> 4) & 0x07 
 		result["Res"] := p.PipelineReg2 & 0x07
 
 	case 2:
@@ -450,26 +462,26 @@ func (p *Ra8) getOperands(instructionType int) map[string]interface{} {
 		// pipeline reg 1: res4 a4
 		// pipeline reg 2: immediate8
 		result["A"] := p.PipelineReg1 & 0x07
-		result["Res"] := (p.PipelineReg1 >> 4) & 0x07
+		result["Res"] := (p.PipelineReg1 >> 4) & 0x07 
 		result["Imm"] := p.PipelineReg2
 
 	case 3:
 		// opcode xx ------
 		// pipeline reg 1: res4 a4
 		result["A"] := p.PipelineReg1 & 0x07
-		result["Res"] := (p.PipelineReg1 >> 4) & 0x07
+		result["Res"] := (p.PipelineReg1 >> 4) & 0x07 
 
 	case 4:
 		// opcode xx ------
 		// pipeline reg 1: immediate8
 		result["Imm"] := p.PipelineReg1
-		result["Res"] := (p.PipelineReg1 >> 4) & 0x07
+		result["Res"] := (p.PipelineReg1 >> 4) & 0x07 
 
 	case 5:
 		// opcode xx ------
 		// pipeline reg 1: a4 b4
 		result["A"] := p.PipelineReg1 & 0x07
-		result["B"] := (p.PipelineReg1 >> 4) & 0x07
+		result["B"] := (p.PipelineReg1 >> 4) & 0x07 
 
 	case 5:
 		// opcode xx ------
@@ -485,7 +497,7 @@ func (p *Ra8) getOperands(instructionType int) map[string]interface{} {
 
 	return result
 }
-
+ 
 // get pointerss to register
 func (p *Ra8) registerPointers() []*byte {
 	return []*byte{
@@ -519,3 +531,4 @@ func (p *Ra8) SetRegisterValue(index int, value byte) {
 	}
 	*p.registerPointers()[index] = value
 }
+

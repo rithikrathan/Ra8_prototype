@@ -1,0 +1,52 @@
+func (p *Ra8) getOperands(formatType string) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	switch formatType {
+	case "immediate data":
+		result["ImmediateData"] = p.PipelineReg1
+
+	case "register type":
+		regIndex := p.PipelineReg1 & 0x07
+		result["RegIndex"] = regIndex
+		result["RegValue"] = p.GetRegisterValue(regIndex)
+		result["RegName"] = p.GetRegisterName(regIndex)
+
+	case "immediate16 type":
+		value := uint16(p.PipelineReg1) | (uint16(p.PipelineReg2) << 8)
+		result["Immediate16"] = value
+
+	case "address type":
+		address := uint16(p.PipelineReg1) | (uint16(p.PipelineReg2) << 8)
+		result["Address"] = address
+
+	case "register,register types":
+		regAIndex := p.PipelineReg1 & 0x07
+		regBIndex := (p.PipelineReg1 >> 4) & 0x07
+		result["RegAIndex"] = regAIndex
+		result["RegAValue"] = p.GetRegisterValue(regAIndex)
+		result["RegAName"] = p.GetRegisterName(regAIndex)
+		result["RegBIndex"] = regBIndex
+		result["RegBValue"] = p.GetRegisterValue(regBIndex)
+		result["RegBName"] = p.GetRegisterName(regBIndex)
+
+	case "register,immediate data types":
+		regIndex := (p.PipelineReg1 >> 4) & 0x07
+		result["RegIndex"] = regIndex
+		result["RegValue"] = p.GetRegisterValue(regIndex)
+		result["RegName"] = p.GetRegisterName(regIndex)
+		result["Immediate"] = p.PipelineReg2
+
+	case "address,register types":
+		address := uint16(p.PipelineReg1) | (uint16(p.PipelineReg2) << 8)
+		regIndex := p.PipelineReg3 & 0x0F
+		result["Address"] = address
+		result["RegIndex"] = regIndex
+		result["RegValue"] = p.GetRegisterValue(regIndex)
+		result["RegName"] = p.GetRegisterName(regIndex)
+
+	default:
+		result["Error"] = fmt.Sprintf("Unknown format type: %s", formatType)
+	}
+
+	return result
+}

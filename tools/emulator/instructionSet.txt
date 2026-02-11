@@ -1,0 +1,74 @@
+INSTRUCTION SET FOR THE TEST CPU
+
+$ -> subroutines
+! -> macro
+
+Arithmetic instructions:
+	ADD -> addition
+	ADI -> add immediate
+	ADDC -> add with carry
+	SUB -> subtraction
+	SUI -> subtract immediate
+	SUBB -> subtract with borrow
+	$MUL -> multiply low byte
+	$MUH -> multiply high byte
+	$MIL -> multiply immediate low byte
+	$MIH -> multiply immediate high byte
+	$DIV -> division
+	$DII -> divide by immediate
+	$REM -> modulo
+	$REI -> modulo by immediate
+	!INC -> increment  general purpose register ADI Reg 1
+	!DEC -> decrement  general purpose register SUI Reg 1
+	!NEG -> arithmetic negate 2's complement XRI Reg 0xff; !INC
+
+Logical instructions:
+	AND -> and
+	ANI -> and immediate
+	OR -> or
+	ORI -> or immediate
+	NOT -> not
+	XOR -> xor
+	XRI -> xor immediate
+	XNR -> xnor
+	XNI -> xnor immediate
+	IIN -> increment index
+	DIN -> decrement index
+	CMP -> compare
+
+Bitwise instructions:
+	RS -> right shift
+	LS -> left shift
+	RR -> right rotate
+	LR -> left rotate
+	ARS -> arithmetic right rotate/shift
+
+Data transfer instructions:
+	MV -> move register values
+	LD -> load from memory
+	LDI -> load immediate
+	ST -> store to memory
+	STI -> store immediate
+	LIN -> load index register 16 bit SI/DI
+	SIN -> store index register 16 bit SI/DI
+	LNR -> load [Rh|Rl] pair to index reg
+	RPC -> register pair to PC
+	RSP -> register pair to SP
+
+Condition check instructions:
+	CON -> check single flag including 0 for no condition
+	COR -> check if any (input - flag mask)
+	CAN -> check if all (input - flag mask)
+
+
+Branching instructions: (Always preceded by a condition check instructions)
+	JMP -> jump
+	CALL -> subroutine call
+	RET -> return from subroutine
+
+Machine control:
+	NOPE -> no operation
+	HLT -> halt
+	SET -> set flag
+
+
