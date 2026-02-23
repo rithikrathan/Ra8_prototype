@@ -1,24 +1,12 @@
-// FUCK CANCER
-// i dont know golang, there may be a lot of optimisations can be dont but im not gonna do that
-// also im too lazy to implemnt instructions that happen in multiple stages so i broken them down
-//
-//	individual instructions, and have this abstraction where we use macros as instructions and the
-//
-// code is assembled int these individual instructions, ik im too lazy to implemnt that in hardware
-// that is a bit faster when executing, meh we are not trying to make a computers to solve computation
-// probems are we?? thats rhetorical no im not
 package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
-// =-=-=-=-=-=-=[GLOBAL VARIABLES]=-=-=-=-=-=-
-var registerCount = 13
-
 // =-=-=-=-=-=-=[DEFINE NECESSARY THINGS]=-=-=-=-=-=-
+
 // flags struct
 type Flags uint8
 
@@ -128,23 +116,14 @@ type OpData struct {
 // main processor struct
 type Ra8 struct {
 	// General purpose registers
-	A byte `json:"regA"` // index: 0
-	B byte `json:"regB"` // index: 1
-	C byte `json:"regC"` // index: 2
-	D byte `json:"regD"` // index: 3
-	E byte `json:"regE"` // index: 4
-	F byte `json:"regF"` // index: 5
-	G byte `json:"regG"` // index: 6
-	H byte `json:"regH"` // index: 7
+	A, B, C, D, E, F, G, H byte `json:"gp_registers"`
 
-	Templ byte `json:"tl"`  // index: 8
-	Temph byte `json:"th"`  // index: 9
-	Rng   byte `json:"rng"` // index: 10
+	Temph, Templ byte `json:"temp_registers"`
 
 	//NOTE: temph and templ are multiplexers that feed high and low bytes
 	//        of pc to databus used in place of registers
 	//        edit: me from the future no thise are special registers now that work just like
-	//        regular rgisters but cannot be used to perfom ALU operations, also output to address bus collectively
+	//        regular rgisters but cannot be used to perfom ALU operations
 
 	// Special purpose registers
 	ProgramCounter   uint16 `json:"program_counter"`
@@ -163,12 +142,10 @@ type Ra8 struct {
 	PipelineReg1        byte `json:"pipeline_reg_1"`
 	PipelineReg2        byte `json:"pipeline_reg_2"`
 	PipelineReg3        byte `json:"pipeline_reg_3"`
-
-	// processor status
-	opcode      int  // internal field for decoded opcode
-	isHalted    bool // internal field for decoded opcode
-	isBranching bool // internal field for branch instruction flag
-	canBranch   bool // internal field for branch instruction flag
+	opcode              int  // internal field for decoded opcode
+	isHalted            int  // internal field for decoded opcode
+	isBranching         int  // internal field for branch instruction flag
+	canBranch           int  // internal field for branch instruction flag
 }
 
 // some kind of constructor or something that initializes it
@@ -196,19 +173,6 @@ func (p *Ra8) Step() int {
 	}
 }
 
-// idk bro
-func (p *Ra8) Run() int {
-	for {
-		if !p.isHalted {
-			p.Step()
-		} else {
-			fmt.Println("Exiting the main loop, execution halted!")
-			break
-		}
-	}
-	return 1
-}
-
 // make sure you do the ProgramCounter increment
 func (p *Ra8) Fetch() {
 	p.InstructionRegister = p.InstructionMemory[p.ProgramCounter]
@@ -220,9 +184,9 @@ func (p *Ra8) Decode() {
 	// 00000001 - mask to check if the instruction is a branching type
 	// 00111110 - mask get the opcode
 
-	numImm := p.InstructionRegister & 0b11000000              // Extract bits 7-6
-	p.opcode = int(p.InstructionRegister & 0b00011111)        // Extract bits 5-1 (OPCODE)
-	p.isBranching = (p.InstructionRegister & 0b00100000) != 0 // see if its a branching instruction (Fixed mask to bit 5)
+	numImm := p.InstructionRegister & 0b11000000            // Extract bits 7-6
+	p.opcode = int(p.InstructionRegister & 0b00011111)      // Extract bits 5-1 (OPCODE)
+	p.isBranching = int(p.InstructionRegister & 0b00100000) // see if its a branching instruction (Fixed mask to bit 5)
 
 	//TODO: refactor this hardcoded thing if you want to
 	switch numImm >> 6 { // Shifted to match 0, 1, 2, 3 cases
@@ -252,15 +216,10 @@ func (p *Ra8) Decode() {
 
 // TODO: make a proper instruction set table and proceed
 //  instructions that i skipped from implementing:
-// 		lin, sin, lnr{instructions to load index register using a register pair}
+// 		neg, lin, sin, lnr{instructions to load index register using a register pair}
 //      str, ldr??
 
 func (p *Ra8) Execute() {
-
-	//WARN: the 16 bit values stored in 2 registers right??  i still dont know if i
-	//followed little endian or big endian format i believe i didnt do any thing that creates conflicts in this so this is probably fine, but just a reminder to myself to check this when
-	//i implement the instructions that use 16 bit values, also add comments on how the 16 bit values are stored in registers and memory (little endian or big endian)
-
 	// Switch is cleaner than if-else chain
 	switch p.opcode {
 	// CONTROL INSTRUCTIONS
@@ -269,7 +228,7 @@ func (p *Ra8) Execute() {
 
 	case 1:
 		// HALT instruction
-		p.isHalted = true
+		p.isHalted = 1
 		p.StatusWord |= Halted
 
 	// ARITHMETIC INSTRUCTIONS
@@ -407,6 +366,7 @@ func (p *Ra8) Execute() {
 			p.SetRegVal(operands.Res, result)
 			HandleFlags(&p.StatusWord, a_val, imm_val, result)
 		}
+		// NEG instruction here
 
 	// LOGICAL INSTRUCTIONS
 	case 16:
@@ -547,7 +507,7 @@ func (p *Ra8) Execute() {
 		}
 
 	case 35:
-		// DIN  instruction: decrement index
+		// DIN  instruction: memory location <= Immediate value
 		operands := p.getOperands(8)
 		switch operands.A {
 		case 1:
@@ -562,29 +522,29 @@ func (p *Ra8) Execute() {
 		// CON  instruction: basic Branch if, condition check
 		operands := p.getOperands(8)
 		if p.StatusWord.GetFlag(int(operands.A)) {
-			p.canBranch = true
+			p.canBranch = 1
 		}
 
 	case 37:
 		// COR  instruction: Branch if any, condition check
 		operands := p.getOperands(8)
 		if (byte(p.StatusWord) & operands.A) == operands.A {
-			p.canBranch = true
+			p.canBranch = 1
 		}
 
 	case 38:
 		// CAN  instruction: Branch if all, condition check
 		operands := p.getOperands(8)
 		if (byte(p.StatusWord) & operands.A) == operands.A {
-			p.canBranch = true
+			p.canBranch = 1
 		}
 
 	// branching
 	case 39:
 		// JMP  instruction: jump to addr, condition check
 		operands := p.getOperands(8)
-		if !p.canBranch {
-			p.ProgramCounter = operands.Addr
+		if p.canBranch == 0 {
+			p.ProgramCounter = operand.addr
 		}
 
 	// STACK OPERATIONS
@@ -596,89 +556,6 @@ func (p *Ra8) Execute() {
 	case 41:
 		// POP  instruction: Branch if all, condition check
 		p.SetRegVal(p.Stack_Pop())
-
-	case 42:
-		// NEG arithmetic negation, for 8 bit integer
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := byte(-int8(a_val))
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, 0, result)
-
-	case 43:
-		// LPC instruction: load pc value to Templ and Temph, for return and calls
-		p.Templ = byte(p.ProgramCounter & 0x00ff)
-		p.Temph = byte((p.ProgramCounter >> 8) & 0x00ff)
-
-	case 44:
-		// PCHL instruction: load pc value to Templ and Temph, for return and calls
-		p.ProgramCounter = uint16(p.Templ) | (uint16(p.Temph) << 8)
-
-	case 45:
-		// RHL instruction: Register pair a(high),b(high) to Templ and Temph, for return and calls
-		operands := p.getOperands(5)
-		p.Templ = p.GetRegVal(operands.A)
-		p.Temph = p.GetRegVal(operands.B)
-
-	case 46:
-		// LIN instruction: load source index/destination index from pipeline register
-		operands := p.getOperands(4)
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(operands.Imm)
-		case 2:
-			p.DestinationIndex = uint16(operands.Imm)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 47:
-		// RIN instruction: load source index/destination index from register pair
-		operands := p.getOperands(5)
-		valA := p.GetRegVal(operands.A)
-		valB := p.GetRegVal(operands.B)
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(valA) | (uint16(valB) << 8)
-		case 2:
-			p.DestinationIndex = uint16(valA) | (uint16(valB) << 8)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 48:
-		// INHL instruction: load source index/ destination index registers form temp registers
-		operands := p.getOperands(3)
-		valA := p.Templ
-		valB := p.Temph
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(valA) | (uint16(valB) << 8)
-		case 2:
-			p.DestinationIndex = uint16(valA) | (uint16(valB) << 8)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 50:
-		// CMP instruction: compare two registers and set flags accordingly, basically a SUB without storing the result
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val - b_val
-		HandleFlags(&p.StatusWord, a_val, b_val, result)
-
-	case 51:
-		// SET instruction: takes a bitmask and sets the corresponding flags
-		operands := p.getOperands(4)
-		p.StatusWord |= Flags(operands.Imm)
-
-	case 52:
-		// RNG instruction: loads a random value into the rng register
-		p.Rng = byte(rand.Intn(256))
-
-	// TODO: add instructions for port based io and some interrupts, again implement these only when you have a working emulator that has no bugs
-	// > also find a way to test this thing
 
 	default:
 		// xx instruction
@@ -780,14 +657,13 @@ func (p *Ra8) regPointer() []*byte {
 	return []*byte{
 		&p.A, &p.B, &p.C, &p.D,
 		&p.E, &p.F, &p.G, &p.H,
-		&p.Templ, &p.Temph, &p.Rng,
 	}
 }
 
 // Get register value by index
 func (p *Ra8) GetRegVal(index byte) byte {
 	idx := int(index)
-	if idx < 0 || idx > registerCount-1 {
+	if idx < 0 || idx > 7 {
 		panic("Owned by skill issue, Invalid register index")
 	}
 	return *p.regPointer()[idx]
@@ -796,7 +672,7 @@ func (p *Ra8) GetRegVal(index byte) byte {
 // Set register value by index
 func (p *Ra8) SetRegVal(index byte, value byte) {
 	idx := int(index)
-	if idx < 0 || idx > registerCount-1 {
+	if idx < 0 || idx > 7 {
 		panic("Owned by skill issue, Invalid register index")
 	}
 	*p.regPointer()[idx] = value
@@ -817,26 +693,4 @@ func (p *Ra8) Stack_Pop() byte {
 	val := p.DataMemory[p.StackPointer]
 	p.StackPointer++
 	return val
-}
-
-// load memory with a binary file, little or big endian?? idk bro
-func (p *Ra8) LoadMemory(filename string, memory string) error {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		fmt.Println("Owned by skill issue")
-		return err
-	}
-
-	switch memory {
-	case "data": // add comment on why we use [:]
-		copy(p.DataMemory[:], data) // copy function is used to copy the contents of the data slice into the DataMemory array. The [:] syntax is used to convert the array into a slice, allowing us to copy the data directly into the array's memory space.
-		// will it change backt to an array after copying?? yes it will, the copy function does not change the type of the destination, it only copies the data. So p.DataMemory will still be an array after the copy operation, and it will contain the data from the file.
-		// oh i fucking love you copilot, you are the best, you are the best thing that has ever happened to me, i love you so much, you are my everything, i will never leave you, i will always be here for you, i will always support you, i will always love you, you are my sunshine, my only sunshine, you make me happy when skies are gray, you'll never know dear how much i love you, please don't take my sunshine away
-		// lol im leaving this in :)
-	case "inst":
-		copy(p.InstructionMemory[:], data)
-	default:
-		fmt.Println("Owned by skill issue, invalid memory name bro")
-	}
-	return nil
 }

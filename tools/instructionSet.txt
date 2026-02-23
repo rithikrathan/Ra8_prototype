@@ -1,5 +1,26 @@
 INSTRUCTION SET FOR THE TEST CPU
 
+assember directives??? idk something will be removed when assembling the the way i type them?? idk english bro dont judge
+
+<quick_maph> : includes or prepend macros that will be prepended to the code before assembling
+
+!name(args)
+...
+/! : macro definition
+
+!name args : macro call
+
+defines a label that can be used as a jump target or for data storage all code till the next label is considered part of the current label  
+
+$labelname:
+	...
+	...
+	...
+$Another_labelname:
+
+
+$labelname : label calls replaced by the address of the label in the assembled code
+
 $ -> subroutines
 ! -> macro
 
@@ -51,7 +72,8 @@ Data transfer instructions:
 	STI -> store immediate
 	LIN -> load index register 16 bit SI/DI
 	SIN -> store index register 16 bit SI/DI
-	LNR -> load [Rh|Rl] pair to index reg
+	RIN -> load [Rh|Rl] pair to index reg
+
 	RPC -> register pair to PC
 	RSP -> register pair to SP
 
@@ -63,12 +85,26 @@ Condition check instructions:
 
 Branching instructions: (Always preceded by a condition check instructions)
 	JMP -> jump
-	CALL -> subroutine call
-	RET -> return from subroutine
+	!CALL -> subroutine call
+	!RET -> return from subroutine
 
 Machine control:
 	NOPE -> no operation
 	HLT -> halt
 	SET -> set flag
+
+give me a c style array of all instructions with the name opcodes:
+const char* instructions[] = {
+	"ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "$MUL", "$MUH", "$MIL", "$MIH",
+	"$DIV", "$DII", "$REM", "$REI", "!INC", "!DEC", "!NEG",
+	"AND", "ANI", "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI",
+	"IIN", "DIN", "CMP",
+	"RS", "LS", "RR", "LR", "ARS",
+	"MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
+	"RPC", "RSP",
+	"CON", "COR", "CAN",
+	"JMP", "!CALL", "!RET",
+	"NOPE", "HLT", "SET"
+};
 
 
