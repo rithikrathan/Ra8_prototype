@@ -105,9 +105,9 @@ int main(int argc, char **argv) {
     case LABELREF:
       printf("LabelRef:   %s\n", cleanup(token, yytext, yyleng));
       break;
-    // case ',':
-    //   printf("Separator:    ,\n");
-    //   break;
+      // case ',':
+      //   printf("Separator:    ,\n");
+      //   break;
     default:
       printf("Owned by skill issue, Unknown Token ID: %d\n", token);
       break;
