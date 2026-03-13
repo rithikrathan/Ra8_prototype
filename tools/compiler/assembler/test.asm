@@ -4,10 +4,12 @@
 ; Registers: A=Target, B=Low, C=High, H=Mid
 
 [__data__]
-	hello=23
-	helo=3
-	ello=hahah
-	LDI=thishouldreturnanerror
+	int8 hello = 23
+	int8 helo  = 3
+	char helo  = 3
+	str ello   = hahah
+	str ptr   *= 0xffff
+	str LDI    = thishouldreturnanerror
 end
 
 
@@ -24,11 +26,11 @@ $BSEARCH_LOOP:
     ; Calculate Mid: H = (B + C) / 2
     ADD H, B, C
     $DII H, H, 2     ; H = H / 2
-    
+
     ; Load value at Mid into Register D
     ; (Assuming you'd set Index Reg to H here)
     LD D, H          ; Get array[mid]
-    
+
     CMP D, A         ; Compare array[mid] with Target
     CON 0            ; If Equal
     JMP $FOUND_IT

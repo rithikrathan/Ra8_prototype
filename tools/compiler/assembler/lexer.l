@@ -3,19 +3,28 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define ERROR 0
+// token definitions
+#define ERROR -1
 #define INST 1
 #define REG 2
 #define BIN 3
 #define HEX 4
 #define NUM 5
-#define LABELDEF 6
-#define LABELREF 7
-#define END 8
-#define EQUALS 9
-#define IDENTIFIER 10
-#define DATASEGMENTSTART 11
-#define INSTSEGMENTSTART 12
+#define DATA_TYPE 6
+#define LABELDEF 7
+#define LABELREF 8
+#define END 9
+#define EQUALS 11
+#define POINTER_EQUALS 12
+#define IDENTIFIER 13
+#define DATASEGMENTSTART 14
+#define INSTSEGMENTSTART 15
+#define LINKSEGMENTSTART 16
+
+// some variables
+bool inDataBlock = false;
+bool inInstBlock = false;
+bool inLinkBlock = false;
 
 const char *instructions[] = {
     "ADD", "ADI",  "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI", "OR",
@@ -23,6 +32,10 @@ const char *instructions[] = {
     "RS",  "LS",   "RR",   "LR",  "ARS", "MV",   "LD",  "LDI", "ST",
     "STI", "LIN",  "SIN",  "RIN", "RPC", "RSP",  "CON", "COR", "CAN",
     "JMP", "NOPE", "HLT",  "SET", NULL
+};
+
+const char *dataTypes[] = {
+    "int8", "int16", "str", "bool", "char", NULL
 };
 
 int is_instruction(const char *str) {
@@ -34,8 +47,32 @@ int is_instruction(const char *str) {
     return 0; // Not an instruction
 }
 
-bool inDataBlock = false;
-bool inInstBlock = false;
+int is_dataType(const char *str) {
+    for (int i = 0; dataTypes[i] != NULL; i++) {
+        if (strcmp(str, dataTypes[i]) == 0) {
+            return 1; // It's an dataType
+        }
+    }
+    return 0; // Not an dataType
+}
+
+// i believe i can do this a lot better but for now this is like this
+void endSegment(){
+	if(inInstBlock){
+		inInstBlock = false;
+	}
+	else if(inDataBlock){
+		inDataBlock = false;
+	}
+	else if(inDataBlock){
+		inLinkBlock = false;
+	}
+	else{
+		printf("Owned by skill issue, 'end' does not match any segments\n");
+	}
+}
+
+
 %}
 
 %%
@@ -54,24 +91,23 @@ bool inInstBlock = false;
 "[__data__]" { inDataBlock = true; return DATASEGMENTSTART; }
 "[__inst__]" { inInstBlock = true; return INSTSEGMENTSTART; }
 "=" { return EQUALS; } /* delimeter for the key value pairs */
+"*=" { return POINTER_EQUALS; } /* delimeter for the pointer key and value pairs */
 "end" { endSegment(); return END; } /* terminator */
 
     /* Matches label definitions */
 "$"[a-zA-Z_][a-zA-Z0-9_]*":" { return LABELDEF; }
 
     /* Matches label references */
-"$"[a-zA-Z_][a-zA-Z0-9_]* { return LABELREF;} 
-
-    /* defining instruction and registers */
-    /* "ADD"|"SUB"|"MV"          { return INST; }   Matches instruction names */
-    /* [A-H]                     { return REG; }    Matches your A-H registers */
+"$"[a-zA-Z_][a-zA-Z0-9_]* { return LABELREF;}
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     if (inDataBlock) {
-		printf("%i", is_instruction(yytext));
+		// printf("%i\n", is_instruction(yytext));
         if (is_instruction(yytext)) {
-			// NOTE:this is still being ignored and returning as an instruction so fix it later
             return ERROR; // instructions cannot be used in data block
+        }
+        else if (is_dataType(yytext)) {
+            return DATA_TYPE;
         } else {
             return IDENTIFIER;
         }
@@ -95,23 +131,8 @@ bool inInstBlock = false;
 . { printf("Err\n");} /* Catch-all for junk */
 %%
 
-// i believe i can do this a lot better but for now this is like this
-void endSegment(){
-	if(inInstBlock){
-		inInstBlock = false;
-	}
-	if(inDataBlock){
-		inDataBlock = false;
-	}
-	else{
-		println("Owned by skill issue, 'end' does not match any segments")
-	}
-}
 
 int yywrap() {
     return 1;
 }
-
-
-
 
