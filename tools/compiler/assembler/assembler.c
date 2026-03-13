@@ -131,7 +131,6 @@ int main(int argc, char **argv) {
     case IDENTIFIER:
       printf("Identifier:    %s\n", yytext);
       break;
->>>>>>> 5b65899 (adding segments):tools/compiler/assembler/assembler.c
     default:
       printf("Owned by skill issue, Unknown Token ID: %d\n", token);
       break;
