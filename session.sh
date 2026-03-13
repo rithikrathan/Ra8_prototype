@@ -2,12 +2,13 @@
 
 SESSION="Ra8_prototype"
 ROOT_DIR="$(pwd)"
+DEPTH=3
 
 # dirs to ignore
 IGNORE_DIRS=("examples" ".git" "libraries" "modes" "reference" "templates" )
 PATTERN=$(IFS="|"; echo "${IGNORE_DIRS[*]}")
 
-TARGET_DIR=$(find "$ROOT_DIR" -mindepth 1 -maxdepth 2 -type d \
+TARGET_DIR=$(find "$ROOT_DIR" -mindepth 1 -maxdepth $DEPTH -type d \
     | grep -Ev "/($PATTERN)(/|$)" \
     | fzf)
 

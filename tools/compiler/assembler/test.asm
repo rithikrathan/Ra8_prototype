@@ -2,6 +2,16 @@
 
 ; Binary Search for value in A, within array at Index Reg
 ; Registers: A=Target, B=Low, C=High, H=Mid
+
+[__data__]
+	hello=23
+	helo=3
+	ello=hahah
+	LDI=thishouldreturnanerror
+end
+
+
+[__inst__]
 $START:
     LDI B, 0         ; Low = 0
     LDI C, 10        ; High = 10 (Array size)
@@ -44,3 +54,5 @@ $NOT_FOUND:
     LDI D, 0xFF
     ST 0x50, D       ; Store -1 (0xFF) for not found
     HLT
+
+end

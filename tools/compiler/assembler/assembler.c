@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ERROR 0
 #define INST 1
 #define REG 2
 #define BIN 3
@@ -9,6 +10,11 @@
 #define NUM 5
 #define LABELDEF 6
 #define LABELREF 7
+#define END 8
+#define EQUALS 9
+#define IDENTIFIER 10
+#define DATASEGMENTSTART 11
+#define INSTSEGMENTSTART 12
 
 // use variables from the lexer
 extern FILE *yyin;   // The file Lex reads from
@@ -103,17 +109,34 @@ int main(int argc, char **argv) {
       printf("LabelDef:    %s\n", cleanup(token, yytext, yyleng));
       break;
     case LABELREF:
-      printf("LabelRef:   %s\n", cleanup(token, yytext, yyleng));
+      printf("LabelRef:    %s\n", cleanup(token, yytext, yyleng));
       break;
-      // case ',':
-      //   printf("Separator:    ,\n");
-      //   break;
+    case DATASEGMENTSTART:
+      printf("__dataSegment__\n");
+      break;
+    case INSTSEGMENTSTART:
+      printf("__instructionSegment__\n");
+      break;
+    case END:
+      printf("segment ends\n");
+      break;
+    case EQUALS:
+      printf("Assign\n");
+      break;
+
+    case ERROR:
+      printf("Error: Owned by skill issue");
+      break;
+
+    case IDENTIFIER:
+      printf("Identifier:    %s\n", yytext);
+      break;
+>>>>>>> 5b65899 (adding segments):tools/compiler/assembler/assembler.c
     default:
       printf("Owned by skill issue, Unknown Token ID: %d\n", token);
       break;
     }
   }
-
   printf("--- Lexing Complete ---\n");
 
   fclose(file);
