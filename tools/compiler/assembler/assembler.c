@@ -153,7 +153,7 @@ void runLexer() {
       break;
 
     case DATASEGMENTSTART:
-      handle_DataSegment(token);
+      // set global data segment flag here
       break;
     default:
       printf("Owned by skill issue, Unknown Token ID: %d\n", token);
