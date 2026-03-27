@@ -20,9 +20,11 @@
 #define DATASEGMENTSTART 14
 #define INSTSEGMENTSTART 15
 #define LINKSEGMENTSTART 16
+#define STRING_LITERAL 17
 
 // some variables
 bool inDataBlock = false;
+bool expectingValue = false;
 bool inInstBlock = false;
 bool inLinkBlock = false;
 
@@ -64,7 +66,7 @@ void endSegment(){
 	else if(inDataBlock){
 		inDataBlock = false;
 	}
-	else if(inDataBlock){
+    else if(inLinkBlock){
 		inLinkBlock = false;
 	}
 	else{
@@ -83,16 +85,18 @@ void endSegment(){
 ";".* { /* Skip comments */ }
 
     /* defining numeric literals: binary, hexadecimal, and decimal */
-"0b"[01]+ { return BIN; }              /* Matches binary literals */
-"0x"[0-9a-fA-F]+ { return HEX; }       /* Matches hexadecimal literals */
-[0-9]+ { return NUM; }                 /* Matches decimal literals */
+"0b"[01]+ { expectingValue = false; return BIN; }              /* Matches binary literals */
+"0x"[0-9a-fA-F]+ { expectingValue = false; return HEX; }       /* Matches hexadecimal literals */
+[0-9]+ { expectingValue = false; return NUM; }                 /* Matches decimal literals */
+
+\"[^\"]*\" { expectingValue = false; return STRING_LITERAL; }  /* Matches quoted string literals */
 
     /* defining the segments */
 "[__data__]" { inDataBlock = true; return DATASEGMENTSTART; }
 "[__inst__]" { inInstBlock = true; return INSTSEGMENTSTART; }
-"=" { return EQUALS; } /* delimeter for the key value pairs */
-"*=" { return POINTER_EQUALS; } /* delimeter for the pointer key and value pairs */
-"end" { endSegment(); return END; } /* terminator */
+"=" { expectingValue = true; return EQUALS; } /* delimeter for the key value pairs */
+"*=" { expectingValue = true; return POINTER_EQUALS; } /* delimeter for the pointer key and value pairs */
+"end" { expectingValue = false; endSegment(); return END; } /* terminator */
 
     /* Matches label definitions */
 "$"[a-zA-Z_][a-zA-Z0-9_]*":" { return LABELDEF; }
@@ -102,7 +106,10 @@ void endSegment(){
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     if (inDataBlock) {
-		// printf("%i\n", is_instruction(yytext));
+        if (expectingValue) {
+            expectingValue = false;
+            return STRING_LITERAL;
+        }
         if (is_instruction(yytext)) {
             return ERROR; // instructions cannot be used in data block
         }
@@ -111,7 +118,7 @@ void endSegment(){
         } else {
             return IDENTIFIER;
         }
-    } // handle data block
+    }
 	else if (inInstBlock){
 		if (is_instruction(yytext)) {
 			return INST; // It's an instruction
@@ -120,7 +127,7 @@ void endSegment(){
 		if (strlen(yytext) == 1 && yytext[0] >= 'A' && yytext[0] <= 'H') {
 			return REG; // It's a register
 		}
-	} // handle instruction block
+	}
 
     printf("owned by skill issue, not an instruction or a register\n");
 }

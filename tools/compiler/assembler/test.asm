@@ -7,7 +7,7 @@
 	int8 hello = 23
 	int8 helo  = 3
 	char helo  = 3
-	str ello   = hahah
+	str ello   = "hahah"
 	str ptr   *= 0xffff
 	str LDI    = thishouldreturnanerror
 end
