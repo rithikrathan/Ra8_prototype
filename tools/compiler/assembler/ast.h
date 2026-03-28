@@ -1,11 +1,12 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdarg.h>
 #include <stddef.h>
 
 // typedef enum {} nodeType;
 typedef enum {
-  rort,
+  root,
   section,
   instruction,
   labelDef,
@@ -62,10 +63,6 @@ typedef struct astNode {
 
 void addChild(astNode *parent, astNode *child);
 
-astNode *createLabelNode();
-astNode *createInstructionNode();
-astNode *createRegisterNode();
-astNode *createDataDeclarationNode();
-astNode *createSectionNode();
+astNode *createNode(nodeType type, ...);
 
 #endif // !AST_H

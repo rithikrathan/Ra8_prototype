@@ -119,6 +119,7 @@ void endSegment(){
             return IDENTIFIER;
         }
     }
+
 	else if (inInstBlock){
 		if (is_instruction(yytext)) {
 			return INST; // It's an instruction
@@ -133,7 +134,6 @@ void endSegment(){
 }
 
     /* add macros later */
-    /* add variable definitions later */
     /* other stuffs */
 . { printf("Err\n");} /* Catch-all for junk */
 %%
