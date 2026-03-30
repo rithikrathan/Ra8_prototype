@@ -25,7 +25,7 @@ $BSEARCH_LOOP:
 
     ; Calculate Mid: H = (B + C) / 2
     ADD H, B, C
-    $DII H, H, 2     ; H = H / 2
+    RS H, H, 1       ; H = H / 2 (shift right by 1 to divide by 2)
 
     ; Load value at Mid into Register D
     ; (Assuming you'd set Index Reg to H here)

@@ -1,32 +1,11 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
+#include <stdlib.h>
+#include "ast.h"
+#include "parser.tab.h"
 
-// token definitions
-#define ERROR -1
-#define INST 1
-#define REG 2
-#define BIN 3
-#define HEX 4
-#define NUM 5
-#define DATA_TYPE 6
-#define LABELDEF 7
-#define LABELREF 8
-#define END 9
-#define EQUALS 11
-#define POINTER_EQUALS 12
-#define IDENTIFIER 13
-#define DATASEGMENTSTART 14
-#define INSTSEGMENTSTART 15
-#define LINKSEGMENTSTART 16
-#define STRING_LITERAL 17
-
-// some variables
-bool inDataBlock = false;
-bool expectingValue = false;
-bool inInstBlock = false;
-bool inLinkBlock = false;
+int inDataSection = 0;
 
 const char *instructions[] = {
     "ADD", "ADI",  "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI", "OR",
@@ -43,103 +22,107 @@ const char *dataTypes[] = {
 int is_instruction(const char *str) {
     for (int i = 0; instructions[i] != NULL; i++) {
         if (strcmp(str, instructions[i]) == 0) {
-            return 1; // It's an instruction
+            return 1;
         }
     }
-    return 0; // Not an instruction
+    return 0;
 }
 
 int is_dataType(const char *str) {
     for (int i = 0; dataTypes[i] != NULL; i++) {
         if (strcmp(str, dataTypes[i]) == 0) {
-            return 1; // It's an dataType
+            return 1;
         }
     }
-    return 0; // Not an dataType
+    return 0;
 }
 
-// i believe i can do this a lot better but for now this is like this
-void endSegment(){
-	if(inInstBlock){
-		inInstBlock = false;
-	}
-	else if(inDataBlock){
-		inDataBlock = false;
-	}
-    else if(inLinkBlock){
-		inLinkBlock = false;
-	}
-	else{
-		printf("Owned by skill issue, 'end' does not match any segments\n");
-	}
+char *strdup_custom(const char *s) {
+    size_t len = strlen(s) + 1;
+    char *copy = malloc(len);
+    if (copy) {
+        memcpy(copy, s, len);
+    }
+    return copy;
 }
-
-
 %}
 
+%option noyywrap
+
 %%
-    /* patterns */
-    /* basic */
-[,\t\n ]+ { /* Skip whitespace */ }
 
-";".* { /* Skip comments */ }
+"," { return ','; }
+[ \t\n]+ { }
+";".* { }
 
-    /* defining numeric literals: binary, hexadecimal, and decimal */
-"0b"[01]+ { expectingValue = false; return BIN; }              /* Matches binary literals */
-"0x"[0-9a-fA-F]+ { expectingValue = false; return HEX; }       /* Matches hexadecimal literals */
-[0-9]+ { expectingValue = false; return NUM; }                 /* Matches decimal literals */
+"0b"[01]+ {
+    yylval.num = strtol(yytext + 2, NULL, 2);
+    return BIN;
+}
 
-\"[^\"]*\" { expectingValue = false; return STRING_LITERAL; }  /* Matches quoted string literals */
+"0x"[0-9a-fA-F]+ {
+    yylval.num = strtol(yytext + 2, NULL, 16);
+    return HEX;
+}
 
-    /* defining the segments */
-"[__data__]" { inDataBlock = true; return DATASEGMENTSTART; }
-"[__inst__]" { inInstBlock = true; return INSTSEGMENTSTART; }
-"=" { expectingValue = true; return EQUALS; } /* delimeter for the key value pairs */
-"*=" { expectingValue = true; return POINTER_EQUALS; } /* delimeter for the pointer key and value pairs */
-"end" { expectingValue = false; endSegment(); return END; } /* terminator */
+[0-9]+ {
+    yylval.num = atoi(yytext);
+    return NUM;
+}
 
-    /* Matches label definitions */
-"$"[a-zA-Z_][a-zA-Z0-9_]*":" { return LABELDEF; }
+\"[^\"]*\" {
+    yylval.str = strdup_custom(yytext);
+    return STRING_LITERAL;
+}
 
-    /* Matches label references */
-"$"[a-zA-Z_][a-zA-Z0-9_]* { return LABELREF;}
+"[__data__]" { 
+    inDataSection = 1;
+    return DATASEGMENTSTART; 
+}
+
+"[__inst__]" { 
+    inDataSection = 0;
+    return INSTSEGMENTSTART; 
+}
+
+"=" { return EQUALS; }
+
+"*=" { return POINTER_EQUALS; }
+
+"end" { 
+    inDataSection = 0;
+    return END; 
+}
+
+"$"[a-zA-Z_][a-zA-Z0-9_]*":" {
+    yylval.str = strdup_custom(yytext);
+    return LABELDEF;
+}
+
+"$"[a-zA-Z_][a-zA-Z0-9_]* {
+    yylval.str = strdup_custom(yytext);
+    return LABELREF;
+}
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    if (inDataBlock) {
-        if (expectingValue) {
-            expectingValue = false;
-            return STRING_LITERAL;
-        }
-        if (is_instruction(yytext)) {
-            return ERROR; // instructions cannot be used in data block
-        }
-        else if (is_dataType(yytext)) {
-            return DATA_TYPE;
-        } else {
+    if (is_instruction(yytext)) {
+        if (inDataSection) {
+            yylval.str = strdup_custom(yytext);
             return IDENTIFIER;
         }
+        yylval.str = strdup_custom(yytext);
+        return INST;
     }
-
-	else if (inInstBlock){
-		if (is_instruction(yytext)) {
-			return INST; // It's an instruction
-		}
-
-		if (strlen(yytext) == 1 && yytext[0] >= 'A' && yytext[0] <= 'H') {
-			return REG; // It's a register
-		}
-	}
-
-    printf("owned by skill issue, not an instruction or a register\n");
+    if (is_dataType(yytext)) {
+        yylval.str = strdup_custom(yytext);
+        return DATA_TYPE;
+    }
+    if (strlen(yytext) == 1 && yytext[0] >= 'A' && yytext[0] <= 'H') {
+        yylval.str = strdup_custom(yytext);
+        return REG;
+    }
+    yylval.str = strdup_custom(yytext);
+    return IDENTIFIER;
 }
 
-    /* add macros later */
-    /* other stuffs */
-. { printf("Err\n");} /* Catch-all for junk */
-%%
-
-
-int yywrap() {
-    return 1;
-}
-
+. { }

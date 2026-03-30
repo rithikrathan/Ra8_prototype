@@ -63,7 +63,7 @@ typedef struct astNode {
   } as;
 } astNode;
 
-void addChild(astNode *parent, astNode *child);
+void addchild(astNode *parent, astNode *child);
 astNode *createNode(nodeType type, ...);
 void freeNode(astNode *node);
 
