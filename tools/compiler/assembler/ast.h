@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-// typedef enum {} nodeType;
 typedef enum {
   root,
   section,
@@ -26,6 +25,10 @@ typedef enum {
 
 typedef struct astNode {
   nodeType type;
+
+  struct astNode **children; // Pointer to the actual array of child nodes
+  size_t childCount;         // How many children are currently attached
+  size_t childCapacity;      // How much memory is currently allocated
 
   union {
     // instruction struct
@@ -55,14 +58,13 @@ typedef struct astNode {
     // section struct
     struct {
       char *name;
-      struct astNode **valueNode;
-      size_t statement_count;
     } section;
+
   } as;
 } astNode;
 
 void addChild(astNode *parent, astNode *child);
-
 astNode *createNode(nodeType type, ...);
+void freeNode(astNode *node);
 
 #endif // !AST_H
