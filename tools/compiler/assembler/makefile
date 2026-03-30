@@ -1,6 +1,8 @@
 CC = gcc
 FLEX = flex
 LEXER = lexer.l
+PARSER = parser.y
+PARSER_OUT = parser.tab.c
 LEX_OUT = lex.yy.c
 OUTPUT = assembler
 

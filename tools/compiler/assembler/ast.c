@@ -80,36 +80,5 @@ void addchild(astNode *parentNode, astNode *childNode) {
   parentNode->childCount++;
 }
 
-void freeNode(astNode *node) {
-  if (node == NULL)
-    return;
-
-  // 1. Post-order traversal: Free the lowest leaves of the tree first
-  for (size_t i = 0; i < node->childCount; i++) {
-    freeNode(node->children[i]);
-  }
-
-  // 2. Free the array holding the child pointers
-  if (node->children != NULL) {
-    free(node->children);
-  }
-
-  // 3. Free specific union payloads
-  if (node->type == instruction && node->as.instruction.operands != NULL) {
-    // Free the operands array.
-    // Note: The actual operand nodes should ideally be freed in step 1 if they
-    // are children.
-    free(node->as.instruction.operands);
-  }
-
-  /* * NOTE ON STRINGS:
-   * Because createNode just points to the strings passed in (e.g., va_arg(args,
-   * char*)) rather than duplicating them with strdup(), we assume those strings
-   * are either string literals or are being freed elsewhere by your lexer. If
-   * you ever change createNode to use strdup(), you must add free() calls for
-   * those strings right here before freeing the node.
-   */
-
-  // 4. Finally, free the node itself
-  free(node);
-}
+void freeNode(astNode *node) {} // not defined so yea free everything only when
+                                // the program exits, cus frick you

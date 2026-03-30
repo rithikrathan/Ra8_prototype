@@ -927,6 +927,7 @@ YY_RULE_SETUP
             return IDENTIFIER;
         }
     }
+
 	else if (inInstBlock){
 		if (is_instruction(yytext)) {
 			return INST; // It's an instruction
@@ -941,7 +942,6 @@ YY_RULE_SETUP
 }
 	YY_BREAK
 /* add macros later */
-/* add variable definitions later */
 /* other stuffs */
 case 15:
 YY_RULE_SETUP
