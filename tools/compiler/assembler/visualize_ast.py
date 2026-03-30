@@ -41,7 +41,7 @@ def parse_dot_format(text):
     
     return nodes, edges
 
-def build_tree(nodes, edges, root_id=0, parent=None, indent=0, visited=None):
+def build_tree(nodes, edges, root_id=0, indent=0, visited=None):
     """Build tree representation as list of (indent, label) tuples."""
     if visited is None:
         visited = set()
@@ -59,8 +59,9 @@ def build_tree(nodes, edges, root_id=0, parent=None, indent=0, visited=None):
     lines.append((indent, label))
     
     children = [to_id for (fr, to_id) in edges if fr == root_id and to_id not in visited]
+    
     for child_id in children:
-        lines.extend(build_tree(nodes, edges, child_id, root_id, indent + 1, visited))
+        lines.extend(build_tree(nodes, edges, child_id, indent + 1, visited))
     
     return lines
 
@@ -68,8 +69,11 @@ def print_text_tree(nodes, edges):
     """Print tree as ASCII art."""
     lines = build_tree(nodes, edges)
     for indent, label in lines:
-        prefix = "│   " * (indent - 1) + "├── " if indent > 0 else ""
-        print(prefix + label)
+        if indent == 0:
+            print(label)
+        else:
+            prefix = "│   " * (indent - 1) + "├── "
+            print(prefix + label)
 
 def create_graphviz(nodes, edges):
     """Create a graphviz digraph from parsed nodes and edges."""

@@ -49,6 +49,12 @@ typedef struct astNode {
       char *name;
     } reg;
 
+    // literal struct
+    struct {
+      char *value;
+      int intValue;
+    } literal;
+
     // dataDeclaration struct
     struct {
       dataType type;

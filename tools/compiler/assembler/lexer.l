@@ -57,16 +57,19 @@ char *strdup_custom(const char *s) {
 
 "0b"[01]+ {
     yylval.num = strtol(yytext + 2, NULL, 2);
+    yylval.str = strdup_custom(yytext);
     return BIN;
 }
 
 "0x"[0-9a-fA-F]+ {
     yylval.num = strtol(yytext + 2, NULL, 16);
+    yylval.str = strdup_custom(yytext);
     return HEX;
 }
 
 [0-9]+ {
     yylval.num = atoi(yytext);
+    yylval.str = strdup_custom(yytext);
     return NUM;
 }
 

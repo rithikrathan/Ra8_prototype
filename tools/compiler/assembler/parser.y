@@ -7,7 +7,18 @@
 
 void yyerror(const char *s);
 int yylex(void);
+extern char *yytext;
 astNode *ast_root = NULL;
+
+dataType parse_data_type(const char *s) {
+    if (strcmp(s, "int8") == 0) return int8;
+    if (strcmp(s, "int16") == 0) return int16;
+    if (strcmp(s, "chr") == 0) return chr;
+    if (strcmp(s, "str") == 0) return str;
+    if (strcmp(s, "bool") == 0) return boolean;
+    if (strcmp(s, "char") == 0) return chr;
+    return str;
+}
 %}
 
 %union {
@@ -22,7 +33,7 @@ astNode *ast_root = NULL;
 
 %type <node> program sections section data_section inst_section
 %type <node> data_declarations data_declaration data_value
-%type <node> instructions inst_line operand operands
+%type <node> lines line operands operand
 
 %start program
 
@@ -78,23 +89,23 @@ data_declarations:
 
 data_declaration:
     DATA_TYPE IDENTIFIER EQUALS data_value {
-        $$ = createNode(dataDeclaration, str, $2, $4);
+        $$ = createNode(dataDeclaration, parse_data_type($1), $2, $4);
     }
     | DATA_TYPE IDENTIFIER POINTER_EQUALS data_value {
-        $$ = createNode(dataDeclaration, str, $2, $4);
+        $$ = createNode(dataDeclaration, parse_data_type($1), $2, $4);
     }
     ;
 
 data_value:
-    NUM { $$ = createNode(literal); }
-    | BIN { $$ = createNode(literal); }
-    | HEX { $$ = createNode(literal); }
-    | STRING_LITERAL { $$ = createNode(literal); }
-    | IDENTIFIER { $$ = createNode(literal); }
+    NUM { $$ = createNode(literal, strdup(yytext), $1); }
+    | BIN { $$ = createNode(literal, strdup(yytext), $1); }
+    | HEX { $$ = createNode(literal, strdup(yytext), $1); }
+    | STRING_LITERAL { $$ = createNode(literal, $1, 0); }
+    | IDENTIFIER { $$ = createNode(literal, $1, 0); }
     ;
 
 inst_section:
-    INSTSEGMENTSTART instructions END {
+    INSTSEGMENTSTART lines END {
         $$ = createNode(section, "inst");
         if ($2 != NULL) {
             addchild($$, $2);
@@ -102,9 +113,9 @@ inst_section:
     }
     ;
 
-instructions:
+lines:
     %empty { $$ = NULL; }
-    | instructions inst_line {
+    | lines line {
         if ($1 == NULL) {
             $$ = $2;
         } else {
@@ -114,36 +125,19 @@ instructions:
     }
     ;
 
-inst_line:
-    LABELDEF INST operands {
-        astNode *labelNode = createNode(labelDef, $1);
-        astNode *instNode = createNode(instruction, $2);
-        if ($3 != NULL) {
-            for (size_t i = 0; i < $3->childCount; i++) {
-                addchild(instNode, $3->children[i]);
-            }
-            free($3->children);
-            free($3);
-        }
-        addchild(labelNode, instNode);
-        $$ = labelNode;
-    }
-    | LABELDEF INST {
-        astNode *labelNode = createNode(labelDef, $1);
-        astNode *instNode = createNode(instruction, $2);
-        addchild(labelNode, instNode);
-        $$ = labelNode;
+line:
+    LABELDEF {
+        $$ = createNode(labelDef, $1);
     }
     | INST operands {
-        astNode *instNode = createNode(instruction, $1);
+        $$ = createNode(instruction, $1);
         if ($2 != NULL) {
             for (size_t i = 0; i < $2->childCount; i++) {
-                addchild(instNode, $2->children[i]);
+                addchild($$, $2->children[i]);
             }
             free($2->children);
             free($2);
         }
-        $$ = instNode;
     }
     | INST {
         $$ = createNode(instruction, $1);
@@ -161,10 +155,10 @@ operands:
 operand:
     REG { $$ = createNode(reg, $1); }
     | LABELREF { $$ = createNode(labelRef, $1); }
-    | NUM { $$ = createNode(literal); }
-    | BIN { $$ = createNode(literal); }
-    | HEX { $$ = createNode(literal); }
-    | STRING_LITERAL { $$ = createNode(literal); }
+    | NUM { $$ = createNode(literal, strdup(yytext), $1); }
+    | BIN { $$ = createNode(literal, strdup(yytext), $1); }
+    | HEX { $$ = createNode(literal, strdup(yytext), $1); }
+    | STRING_LITERAL { $$ = createNode(literal, $1, 0); }
     ;
 
 %%

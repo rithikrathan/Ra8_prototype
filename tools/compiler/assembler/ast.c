@@ -1,18 +1,15 @@
 #include "ast.h"
 #include <stdarg.h>
 #include <stdlib.h>
-// #include <string.h>
+#include <stdio.h>
 
 astNode *createNode(nodeType type, ...) {
-  // Allocate memory and check for allocation errors
   astNode *node = (astNode *)malloc(sizeof(astNode));
   if (node == NULL) {
     return NULL;
   }
 
   node->type = type;
-
-  // Initialize the dynamic array properties for children
   node->children = NULL;
   node->childCount = 0;
   node->childCapacity = 0;
@@ -36,8 +33,12 @@ astNode *createNode(nodeType type, ...) {
     node->as.reg.name = va_arg(args, char *);
     break;
 
+  case literal:
+    node->as.literal.value = va_arg(args, char *);
+    node->as.literal.intValue = va_arg(args, int);
+    break;
+
   case dataDeclaration:
-    // Enums promote to int in va_arg, and valueNode is an astNode*
     node->as.dataDeclaration.type = (dataType)va_arg(args, int);
     node->as.dataDeclaration.identifier = va_arg(args, char *);
     node->as.dataDeclaration.valueNode = va_arg(args, astNode *);
@@ -51,9 +52,7 @@ astNode *createNode(nodeType type, ...) {
     break;
   }
 
-  // CRITICAL: Prevent memory leaks from the variadic list meh man fuxkt htis
   va_end(args);
-
   return node;
 }
 
@@ -75,15 +74,11 @@ void addchild(astNode *parentNode, astNode *childNode) {
     parentNode->childCapacity = newCapacity;
   }
 
-  // Assign the child and increment the counter
   parentNode->children[parentNode->childCount] = childNode;
   parentNode->childCount++;
 }
 
-void freeNode(astNode *node) {} // not defined so yea free everything only when
-                                // the program exits, cus frick you
-
-static int node_counter = 0;
+void freeNode(astNode *node) {}
 
 const char *node_type_str(nodeType type) {
     switch (type) {
@@ -134,6 +129,9 @@ void print_node_json(astNode *node, FILE *out, int *node_id) {
             }
             break;
         case literal:
+            if (node->as.literal.value) {
+                fprintf(out, "\\n%s", node->as.literal.value);
+            }
             break;
         default:
             break;
@@ -149,14 +147,13 @@ void print_node_json(astNode *node, FILE *out, int *node_id) {
 
 void print_ast_json(astNode *node, FILE *out) {
     if (node == NULL) {
-        fprintf(out, "{\"nodes\": [], \"edges\": []}\n");
+        fprintf(out, "{\n  \"nodes\": [],\n  \"edges\": []\n}\n");
         return;
     }
     
     fprintf(out, "{\n");
     fprintf(out, "  \"nodes\": [\n");
     
-    node_counter = 0;
     int node_id = 0;
     print_node_json(node, out, &node_id);
     

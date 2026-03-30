@@ -18,15 +18,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("--- Parsing %s ---\n", argv[1]);
     int result = yyparse();
     fclose(yyin);
 
     if (result == 0) {
-        printf("--- Parse successful ---\n");
         print_ast_json(ast_root, stdout);
-    } else {
-        printf("--- Parse failed ---\n");
     }
 
     return result;
