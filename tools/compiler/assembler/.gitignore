@@ -1,0 +1,9 @@
+.venv/
+assembler
+lex.yy.c
+parser.tab.c
+parser.tab.h
+*.dot
+*.png
+*.pdf
+*.svg
