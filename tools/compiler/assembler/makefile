@@ -22,7 +22,13 @@ $(OUTPUT): assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c
 run: $(OUTPUT)
 	./$(OUTPUT) test.asm
 
-clean:
-	rm -f $(LEX_OUT) $(PARSER_OUT) $(PARSER_HDR) $(OUTPUT)
+visualize: $(OUTPUT)
+	python3 visualize_ast.py test.asm --text
 
-.PHONY: all compile run clean
+visualize-dot: $(OUTPUT)
+	python3 visualize_ast.py test.asm -f dot
+
+clean:
+	rm -f $(LEX_OUT) $(PARSER_OUT) $(PARSER_HDR) $(OUTPUT) *.dot *.png *.svg *.pdf
+
+.PHONY: all compile run clean visualize visualize-dot
