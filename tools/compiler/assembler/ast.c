@@ -82,3 +82,85 @@ void addchild(astNode *parentNode, astNode *childNode) {
 
 void freeNode(astNode *node) {} // not defined so yea free everything only when
                                 // the program exits, cus frick you
+
+static int node_counter = 0;
+
+const char *node_type_str(nodeType type) {
+    switch (type) {
+        case root: return "root";
+        case section: return "section";
+        case instruction: return "instruction";
+        case labelDef: return "labelDef";
+        case labelRef: return "labelRef";
+        case reg: return "reg";
+        case literal: return "literal";
+        case dataDeclaration: return "dataDeclaration";
+        default: return "unknown";
+    }
+}
+
+void print_node_json(astNode *node, FILE *out, int *node_id) {
+    if (node == NULL) return;
+    
+    int this_id = (*node_id)++;
+    
+    fprintf(out, "  %d [label=\"%s", this_id, node_type_str(node->type));
+    
+    switch (node->type) {
+        case instruction:
+            if (node->as.instruction.opcode) {
+                fprintf(out, "\\n%s", node->as.instruction.opcode);
+            }
+            break;
+        case labelDef:
+        case labelRef:
+            if (node->as.label.name) {
+                fprintf(out, "\\n%s", node->as.label.name);
+            }
+            break;
+        case reg:
+            if (node->as.reg.name) {
+                fprintf(out, "\\n%s", node->as.reg.name);
+            }
+            break;
+        case section:
+            if (node->as.section.name) {
+                fprintf(out, "\\n%s", node->as.section.name);
+            }
+            break;
+        case dataDeclaration:
+            if (node->as.dataDeclaration.identifier) {
+                fprintf(out, "\\n%s", node->as.dataDeclaration.identifier);
+            }
+            break;
+        case literal:
+            break;
+        default:
+            break;
+    }
+    fprintf(out, "\" shape=box];\n");
+    
+    for (size_t i = 0; i < node->childCount; i++) {
+        int child_id = *node_id;
+        print_node_json(node->children[i], out, node_id);
+        fprintf(out, "  %d -> %d;\n", this_id, child_id);
+    }
+}
+
+void print_ast_json(astNode *node, FILE *out) {
+    if (node == NULL) {
+        fprintf(out, "{\"nodes\": [], \"edges\": []}\n");
+        return;
+    }
+    
+    fprintf(out, "{\n");
+    fprintf(out, "  \"nodes\": [\n");
+    
+    node_counter = 0;
+    int node_id = 0;
+    print_node_json(node, out, &node_id);
+    
+    fprintf(out, "  ],\n");
+    fprintf(out, "  \"edges\": []\n");
+    fprintf(out, "}\n");
+}

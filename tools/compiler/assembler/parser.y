@@ -7,6 +7,7 @@
 
 void yyerror(const char *s);
 int yylex(void);
+astNode *ast_root = NULL;
 %}
 
 %union {
@@ -29,11 +30,11 @@ int yylex(void);
 
 program:
     sections {
-        astNode *rootNode = createNode(root);
+        ast_root = createNode(root);
         if ($1 != NULL) {
-            addchild(rootNode, $1);
+            addchild(ast_root, $1);
         }
-        $$ = rootNode;
+        $$ = ast_root;
     }
     ;
 
@@ -78,11 +79,9 @@ data_declarations:
 data_declaration:
     DATA_TYPE IDENTIFIER EQUALS data_value {
         $$ = createNode(dataDeclaration, str, $2, $4);
-        free($2);
     }
     | DATA_TYPE IDENTIFIER POINTER_EQUALS data_value {
         $$ = createNode(dataDeclaration, str, $2, $4);
-        free($2);
     }
     ;
 
@@ -91,7 +90,7 @@ data_value:
     | BIN { $$ = createNode(literal); }
     | HEX { $$ = createNode(literal); }
     | STRING_LITERAL { $$ = createNode(literal); }
-    | IDENTIFIER { $$ = createNode(literal); free($1); }
+    | IDENTIFIER { $$ = createNode(literal); }
     ;
 
 inst_section:
@@ -128,16 +127,12 @@ inst_line:
         }
         addchild(labelNode, instNode);
         $$ = labelNode;
-        free($1);
-        free($2);
     }
     | LABELDEF INST {
         astNode *labelNode = createNode(labelDef, $1);
         astNode *instNode = createNode(instruction, $2);
         addchild(labelNode, instNode);
         $$ = labelNode;
-        free($1);
-        free($2);
     }
     | INST operands {
         astNode *instNode = createNode(instruction, $1);
@@ -149,11 +144,9 @@ inst_line:
             free($2);
         }
         $$ = instNode;
-        free($1);
     }
     | INST {
         $$ = createNode(instruction, $1);
-        free($1);
     }
     ;
 
@@ -166,8 +159,8 @@ operands:
     ;
 
 operand:
-    REG { $$ = createNode(reg, $1); free($1); }
-    | LABELREF { $$ = createNode(labelRef, $1); free($1); }
+    REG { $$ = createNode(reg, $1); }
+    | LABELREF { $$ = createNode(labelRef, $1); }
     | NUM { $$ = createNode(literal); }
     | BIN { $$ = createNode(literal); }
     | HEX { $$ = createNode(literal); }

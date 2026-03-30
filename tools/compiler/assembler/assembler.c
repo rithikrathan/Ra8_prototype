@@ -4,8 +4,7 @@
 
 extern int yyparse();
 extern FILE *yyin;
-
-void print_ast(astNode *node, int depth);
+extern astNode *ast_root;
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -25,6 +24,7 @@ int main(int argc, char **argv) {
 
     if (result == 0) {
         printf("--- Parse successful ---\n");
+        print_ast_json(ast_root, stdout);
     } else {
         printf("--- Parse failed ---\n");
     }

@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
 
 typedef enum {
   root,
@@ -66,5 +67,6 @@ typedef struct astNode {
 void addchild(astNode *parent, astNode *child);
 astNode *createNode(nodeType type, ...);
 void freeNode(astNode *node);
+void print_ast_json(astNode *node, FILE *out);
 
 #endif // !AST_H
