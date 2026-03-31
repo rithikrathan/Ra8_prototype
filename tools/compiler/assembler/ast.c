@@ -13,6 +13,7 @@ astNode *createNode(nodeType type, ...) {
   node->children = NULL;
   node->childCount = 0;
   node->childCapacity = 0;
+  node->nextSibling = NULL;
 
   va_list args;
   va_start(args, type);
@@ -38,10 +39,12 @@ astNode *createNode(nodeType type, ...) {
     node->as.literal.intValue = va_arg(args, int);
     break;
 
+  case identifier:
+    node->as.identifier.name = va_arg(args, char *);
+    break;
+
   case dataDeclaration:
     node->as.dataDeclaration.type = (dataType)va_arg(args, int);
-    node->as.dataDeclaration.identifier = va_arg(args, char *);
-    node->as.dataDeclaration.valueNode = va_arg(args, astNode *);
     break;
 
   case section:
@@ -89,59 +92,77 @@ const char *node_type_str(nodeType type) {
         case labelRef: return "labelRef";
         case reg: return "reg";
         case literal: return "literal";
+        case identifier: return "identifier";
         case dataDeclaration: return "dataDeclaration";
         default: return "unknown";
     }
 }
 
-void print_node_json(astNode *node, FILE *out, int *node_id) {
+const char *data_type_str(dataType type) {
+    switch (type) {
+        case int8: return "int8";
+        case int16: return "int16";
+        case chr: return "char";
+        case str: return "str";
+        case boolean: return "boolean";
+        default: return "unknown";
+    }
+}
+
+void print_node_json(astNode *node, FILE *out, int *node_id, int parent_id) {
     if (node == NULL) return;
     
     int this_id = (*node_id)++;
     
-    fprintf(out, "  %d [label=\"%s", this_id, node_type_str(node->type));
+    fprintf(out, "  %d [label=\"type: %s", this_id, node_type_str(node->type));
     
     switch (node->type) {
+        case root:
+            break;
+        case section:
+            fprintf(out, "\\nname: %s", 
+                node->as.section.name ? node->as.section.name : "(nil)");
+            break;
         case instruction:
-            if (node->as.instruction.opcode) {
-                fprintf(out, "\\n%s", node->as.instruction.opcode);
-            }
+            fprintf(out, "\\nname: %s", 
+                node->as.instruction.opcode ? node->as.instruction.opcode : "(nil)");
             break;
         case labelDef:
         case labelRef:
-            if (node->as.label.name) {
-                fprintf(out, "\\n%s", node->as.label.name);
-            }
+            fprintf(out, "\\nname: %s", 
+                node->as.label.name ? node->as.label.name : "(nil)");
             break;
         case reg:
-            if (node->as.reg.name) {
-                fprintf(out, "\\n%s", node->as.reg.name);
-            }
-            break;
-        case section:
-            if (node->as.section.name) {
-                fprintf(out, "\\n%s", node->as.section.name);
-            }
-            break;
-        case dataDeclaration:
-            if (node->as.dataDeclaration.identifier) {
-                fprintf(out, "\\n%s", node->as.dataDeclaration.identifier);
-            }
+            fprintf(out, "\\nname: %s", 
+                node->as.reg.name ? node->as.reg.name : "(nil)");
             break;
         case literal:
-            if (node->as.literal.value) {
-                fprintf(out, "\\n%s", node->as.literal.value);
-            }
+            fprintf(out, "\\nvalue: %s", 
+                node->as.literal.value ? node->as.literal.value : "(nil)");
+            break;
+        case identifier:
+            fprintf(out, "\\nname: %s", 
+                node->as.identifier.name ? node->as.identifier.name : "(nil)");
+            break;
+        case dataDeclaration:
+            fprintf(out, "\\ndatatype: %s", data_type_str(node->as.dataDeclaration.type));
             break;
         default:
             break;
     }
+    
     fprintf(out, "\" shape=box];\n");
     
+    if (parent_id >= 0) {
+        fprintf(out, "  %d -> %d;\n", parent_id, this_id);
+    }
+    
     for (size_t i = 0; i < node->childCount; i++) {
-        int child_id = *node_id;
-        print_node_json(node->children[i], out, node_id);
-        fprintf(out, "  %d -> %d;\n", this_id, child_id);
+        print_node_json(node->children[i], out, node_id, this_id);
+    }
+    
+    if (node->type != root && node->type != section && node->nextSibling != NULL) {
+        print_node_json(node->nextSibling, out, node_id, parent_id);
     }
 }
 
@@ -155,7 +176,7 @@ void print_ast_json(astNode *node, FILE *out) {
     fprintf(out, "  \"nodes\": [\n");
     
     int node_id = 0;
-    print_node_json(node, out, &node_id);
+    print_node_json(node, out, &node_id, -1);
     
     fprintf(out, "  ],\n");
     fprintf(out, "  \"edges\": []\n");

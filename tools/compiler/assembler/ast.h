@@ -13,6 +13,7 @@ typedef enum {
   labelRef,
   reg,
   literal,
+  identifier,
   dataDeclaration
 } nodeType;
 
@@ -30,6 +31,7 @@ typedef struct astNode {
   struct astNode **children; // Pointer to the actual array of child nodes
   size_t childCount;         // How many children are currently attached
   size_t childCapacity;      // How much memory is currently allocated
+  struct astNode *nextSibling;
 
   union {
     // instruction struct
@@ -55,11 +57,14 @@ typedef struct astNode {
       int intValue;
     } literal;
 
+    // identifier struct
+    struct {
+      char *name;
+    } identifier;
+
     // dataDeclaration struct
     struct {
       dataType type;
-      char *identifier;
-      struct astNode *valueNode;
     } dataDeclaration;
 
     // section struct

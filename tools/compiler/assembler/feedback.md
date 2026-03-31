@@ -359,3 +359,407 @@ root
 ```
 
 Labels are leaf nodes (just like reg/literal), not containers. Instructions are their siblings in the instruction section.
+
+---
+
+## Problem 13: Data Declarations Nested Instead of Siblings
+
+**Problem:** All data declarations were being nested under the first declaration. For example:
+```
+section: data
+    └── dataDeclaration: hallo
+        ├── dataDeclaration: hee     <- These should be siblings
+        ├── dataDeclaration: helo    <- under section: data
+        ...
+```
+
+**Root Cause:** The `data_declarations` rule was using `addchild()` to build the list:
+
+```yacc
+data_declarations:
+    %empty { $$ = NULL; }
+    | data_declarations data_declaration {
+        if ($1 == NULL) {
+            $$ = $2;
+        } else {
+            addchild($1, $2);   // <-- BUG: adds as CHILD
+            $$ = $1;
+        }
+    }
+    ;
+```
+
+**Solution:** Changed to use `nextSibling` linking (same pattern as `sections`):
+
+```yacc
+data_declarations:
+    %empty { $$ = NULL; }
+    | data_declarations data_declaration {
+        if ($1 == NULL) {
+            $$ = $2;
+        } else {
+            astNode *last = $1;
+            while (last->nextSibling != NULL) {
+                last = last->nextSibling;
+            }
+            last->nextSibling = $2;
+            $$ = $1;
+        }
+    }
+    ;
+```
+
+**Result:** Now all data declarations are siblings under the section:
+```
+section: data
+    ├── dataDeclaration: hallo
+    ├── dataDeclaration: hee
+    ├── dataDeclaration: helo
+    ...
+```
+
+---
+
+## Problem 14: Instructions Nested Instead of Siblings
+
+**Problem:** Same issue as data declarations - instructions were being nested under the first instruction instead of being siblings.
+
+**Solution:** Applied the same fix to the `lines` rule:
+
+```yacc
+lines:
+    %empty { $$ = NULL; }
+    | lines line {
+        if ($1 == NULL) {
+            $$ = $2;
+        } else {
+            astNode *last = $1;
+            while (last->nextSibling != NULL) {
+                last = last->nextSibling;
+            }
+            last->nextSibling = $2;
+            $$ = $1;
+        }
+    }
+    ;
+```
+
+---
+
+## Problem 15: First Operand Missing from Instructions
+
+**Problem:** Instructions with operands were missing the first operand. For example:
+- `LDI B, 0` showed only `literal: 0`, not `reg: B`
+- `ADD H, B, C` showed only `reg: C`, missing `reg: H` and `reg: B`
+
+**Root Cause:** The `operands` rule stores the first operand in the returned node, then adds subsequent operands as children. The `line` rule was only adding the children, not the first operand itself:
+
+```yacc
+| INST operands {
+    $$ = createNode(instruction, $1);
+    if ($2 != NULL) {
+        for (size_t i = 0; i < $2->childCount; i++) {
+            addchild($$, $2->children[i]);  // Only added children!
+        }
+        // Forgot to add $2 itself!
+        free($2->children);
+        free($2);
+    }
+}
+```
+
+**Solution 1 (Failed):** Adding `addchild($$, $2)` before the loop caused memory corruption and exponential node explosion.
+
+**Solution 2 (Working):** Changed the `operands` rule to use `nextSibling` linking instead of `addchild`:
+
+```yacc
+operands:
+    operand { $$ = $1; }
+    | operands ',' operand {
+        astNode *last = $1;
+        while (last->nextSibling != NULL) {
+            last = last->nextSibling;
+        }
+        last->nextSibling = $3;
+        $$ = $1;
+    }
+    ;
+```
+
+Then updated `line` to iterate through the `nextSibling` chain:
+
+```yacc
+| INST operands {
+    $$ = createNode(instruction, $1);
+    astNode *op = $2;
+    while (op != NULL) {
+        addchild($$, op);
+        astNode *next = op->nextSibling;
+        op->nextSibling = NULL;
+        op = next;
+    }
+}
+```
+
+**Result:** All operands are now correctly attached to instructions:
+```
+instruction: LDI
+    ├── reg: B
+    └── literal: 0
+instruction: ADD
+    ├── reg: H
+    ├── reg: B
+    └── reg: C
+```
+
+---
+
+## Current Grammar Structure
+
+```yacc
+root:
+    sections {
+        ast_root = createNode(root);
+        astNode *current = $1;
+        while (current != NULL) {
+            addchild(ast_root, current);
+            current = current->nextSibling;
+        }
+        $$ = ast_root;
+    }
+    ;
+
+sections:
+    section { $$ = $1; }
+    | sections section {
+        $$ = $1;
+        if ($2 != NULL) {
+            astNode *last = $$;
+            while (last->nextSibling != NULL) {
+                last = last->nextSibling;
+            }
+            last->nextSibling = $2;
+        }
+    }
+    ;
+
+section: data_section { $$ = $1; }
+    | inst_section { $$ = $1; }
+    ;
+
+data_section:
+    DATASEGMENTSTART data_declarations END {
+        $$ = createNode(section, "data");
+        if ($2 != NULL) {
+            addchild($$, $2);
+        }
+    }
+    ;
+
+data_declarations:
+    %empty { $$ = NULL; }
+    | data_declarations data_declaration {
+        if ($1 == NULL) { $$ = $2; }
+        else {
+            astNode *last = $1;
+            while (last->nextSibling != NULL) last = last->nextSibling;
+            last->nextSibling = $2;
+            $$ = $1;
+        }
+    }
+    ;
+
+inst_section:
+    INSTSEGMENTSTART lines END {
+        $$ = createNode(section, "inst");
+        if ($2 != NULL) {
+            addchild($$, $2);
+        }
+    }
+    ;
+
+lines:
+    %empty { $$ = NULL; }
+    | lines line {
+        if ($1 == NULL) { $$ = $2; }
+        else {
+            astNode *last = $1;
+            while (last->nextSibling != NULL) last = last->nextSibling;
+            last->nextSibling = $2;
+            $$ = $1;
+        }
+    }
+    ;
+
+line:
+    LABELDEF { $$ = createNode(labelDef, $1); }
+    | INST operands {
+        $$ = createNode(instruction, $1);
+        astNode *op = $2;
+        while (op != NULL) {
+            addchild($$, op);
+            astNode *next = op->nextSibling;
+            op->nextSibling = NULL;
+            op = next;
+        }
+    }
+    | INST { $$ = createNode(instruction, $1); }
+    ;
+
+operands:
+    operand { $$ = $1; }
+    | operands ',' operand {
+        astNode *last = $1;
+        while (last->nextSibling != NULL) last = last->nextSibling;
+        last->nextSibling = $3;
+        $$ = $1;
+    }
+    ;
+
+operand:
+    REG { $$ = createNode(reg, $1); }
+    | LABELREF { $$ = createNode(labelRef, $1); }
+    | NUM { $$ = createNode(literal, strdup(yytext), $1); }
+    | BIN { $$ = createNode(literal, strdup(yytext), $1); }
+    | HEX { $$ = createNode(literal, strdup(yytext), $1); }
+    | STRING_LITERAL { $$ = createNode(literal, $1, 0); }
+    ;
+```
+
+---
+
+## Key Pattern: nextSibling vs children
+
+The AST uses two ways to link nodes:
+
+1. **Children (`children[]` array)**: For parent-child relationships (section contains declarations)
+2. **nextSibling**: For sibling lists (multiple declarations/instructions under one parent)
+
+Rules that accumulate items into a list use `nextSibling` linking:
+- `sections`
+- `data_declarations`
+- `lines`
+- `operands`
+
+Rules that create a single node with children use `children[]`:
+- `root` adds sections as children
+- `section` adds declarations/instructions as children
+- `instruction` adds operands as children
+
+---
+
+## Problem 16: dataDeclaration Node Structure
+
+**Problem:** `dataDeclaration` stored all its information (type, identifier, value) in the union fields. User wanted a proper tree structure with children.
+
+**Previous Structure:**
+```
+dataDeclaration (stores type, identifier, valueNode in union)
+```
+
+**Desired Structure:**
+```
+dataDeclaration (datatype stored in union as property)
+    ├── identifier (new node type with name in union)
+    └── literal (value stored in union)
+```
+
+**Solution:**
+
+1. **Added `identifier` node type** in `ast.h`:
+```c
+typedef enum {
+    // ... existing types ...
+    identifier,  // NEW
+    dataDeclaration
+} nodeType;
+
+// New union entry
+struct {
+    char *name;
+} identifier;
+
+// Simplified dataDeclaration (only datatype in union)
+struct {
+    dataType type;
+} dataDeclaration;
+```
+
+2. **Updated `createNode`** in `ast.c`:
+```c
+case identifier:
+    node->as.identifier.name = va_arg(args, char *);
+    break;
+
+case dataDeclaration:
+    node->as.dataDeclaration.type = (dataType)va_arg(args, int);
+    // No longer takes identifier or valueNode
+    break;
+```
+
+3. **Updated `data_declaration` rule** in `parser.y`:
+```yacc
+data_declaration:
+    DATA_TYPE IDENTIFIER EQUALS data_value {
+        $$ = createNode(dataDeclaration, parse_data_type($1));
+        astNode *idNode = createNode(identifier, $2);
+        addchild($$, idNode);
+        addchild($$, $4);
+    }
+    | DATA_TYPE IDENTIFIER POINTER_EQUALS data_value {
+        $$ = createNode(dataDeclaration, parse_data_type($1));
+        astNode *idNode = createNode(identifier, $2);
+        addchild($$, idNode);
+        addchild($$, $4);
+    }
+    ;
+```
+
+**Result:** `dataDeclaration` now has `datatype` as a property and has `identifier` and `literal` as children:
+```
+dataDeclaration (datatype: int8)
+    ├── identifier: hallo
+    └── literal: 23
+```
+
+---
+
+## Problem 17: DOT Parser Quoted Strings
+
+**Problem:** The Python visualization script crashed when parsing DOT format with quoted strings in labels (e.g., `"hahah"`). The regex `r'(\d+)\s*\[label="([^"]+)"\s*shape=box\];'` failed because double quotes inside the label broke the pattern.
+
+**Solution:** Replaced regex with string search approach:
+```python
+def parse_dot_format(text):
+    nodes = {}
+    edges = []
+    
+    edge_pattern = re.compile(r'(\d+)\s*->\s*(\d+);')
+    
+    for line in text.split('\n'):
+        line = line.strip()
+        
+        if 'shape=box' in line and '[label=' in line:
+            id_match = re.match(r'(\d+)', line)
+            if id_match:
+                node_id = int(id_match.group(1))
+                label_start = line.find('[label="') + 8
+                label_end = line.rfind('" shape=box')
+                if label_start > 7 and label_end > label_start:
+                    label = line[label_start:label_end].replace('\\n', '\n')
+                    nodes[node_id] = label
+                    continue
+        
+        # ... edge parsing unchanged
+```
+
+Also updated `print_node` to display `value` for literal nodes:
+```python
+for part in parts:
+    if ': ' in part:
+        key, value = part.split(': ', 1)
+        if key == 'type':
+            type_name = value
+        elif key == 'name' or key == 'value':
+            name_value = value
+```

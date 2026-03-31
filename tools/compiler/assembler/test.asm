@@ -4,8 +4,8 @@
 ; Registers: A=Target, B=Low, C=High, H=Mid
 
 [__data__]
-	int8 hello = 23
-	int8 helo  = 3
+	int8 hallo = 23
+	int8 hee  = 3
 	char helo  = 3
 	str ello   = "hahah"
 	str ptr   *= 0xffff
@@ -56,5 +56,4 @@ $NOT_FOUND:
     LDI D, 0xFF
     ST 0x50, D       ; Store -1 (0xFF) for not found
     HLT
-
 end
