@@ -6,15 +6,20 @@
 #include "ast.h"
 #include "parser.tab.h"
 
-    // boiler plate thins
+    // boiler plate things
 void yyerror(const char *s);
 int yylex(void);
 extern char *yytext;
 
-astNode *ast_root = NULL;
-astNode *local_root1 = NULL;
-astNode *local_root2 = NULL;
+// external variables for symbolTable
+extern struct hashMap *symbolTable;
+// idk if i should add this
+extern void put(const char *key_str, int val);
+extern void get(const char *key_str);
+extern void freeTable();
 
+astNode *ast_root = NULL;
+int address = 0;
 
 dataType parse_data_type(const char *s) {
     if (strcmp(s, "int8") == 0) return int8;
@@ -23,9 +28,22 @@ dataType parse_data_type(const char *s) {
     if (strcmp(s, "str") == 0) return str;
     if (strcmp(s, "bool") == 0) return boolean;
     if (strcmp(s, "char") == 0) return chr;
-    return str; //default
+    return str;
 }
 %}
+
+char* lableName(const char *inputString, int type){
+    switch (type) {
+        case 0:
+            break;
+        case 1:
+            break;
+    }
+    size_t len = strlen(s) - 2;
+    char* newString = malloc(len);
+    if (newString) {
+    }
+}
 
 // union to differentiate operands
 %union {
@@ -159,6 +177,8 @@ lines:
 
 line:
     LABELDEF {
+        put();
+
         $$ = createNode(labelDef, $1);
     }
     | INST operands {

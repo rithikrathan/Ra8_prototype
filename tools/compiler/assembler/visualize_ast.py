@@ -1,3 +1,4 @@
+#vibecoded
 #!/usr/bin/env python3
 """
 Visualize the AST output from the assembler as a graph using graphviz.
@@ -20,12 +21,12 @@ def parse_dot_format(text):
     """Parse the DOT-like format output from assembler."""
     nodes = {}
     edges = []
-    
+
     edge_pattern = re.compile(r'(\d+)\s*->\s*(\d+);')
-    
+
     for line in text.split('\n'):
         line = line.strip()
-        
+
         if 'shape=box' in line and '[label=' in line:
             id_match = re.match(r'(\d+)', line)
             if id_match:
@@ -36,13 +37,13 @@ def parse_dot_format(text):
                     label = line[label_start:label_end].replace('\\n', '\n')
                     nodes[node_id] = label
                     continue
-        
+
         edge_match = edge_pattern.match(line)
         if edge_match:
             from_id = int(edge_match.group(1))
             to_id = int(edge_match.group(2))
             edges.append((from_id, to_id))
-    
+
     return nodes, edges
 
 ANSI_RESET = "\033[0m"
@@ -99,15 +100,15 @@ def generate_dot(nodes, edges):
         '  node [shape=box, style="rounded,filled", fillcolor="#e8f4f8", color="#2c3e50", fontname="Arial", fontsize="10"];',
         '  edge [color="#7f8c8d"];',
     ]
-    
+
     for node_id, label in nodes.items():
         display = get_display_label(label)
         escaped = display.replace('"', '\\"').replace('\\', '\\\\')
         lines.append(f'  n{node_id} [label="{escaped}"];')
-    
+
     for from_id, to_id in edges:
         lines.append(f'  n{from_id} -> n{to_id};')
-    
+
     lines.append('}')
     return '\n'.join(lines)
 
@@ -115,12 +116,12 @@ def run_assembler(input_file):
     """Run the assembler and capture its output."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     assembler_path = os.path.join(script_dir, 'assembler')
-    
+
     if not os.path.exists(assembler_path):
         print(f"Error: assembler binary not found at {assembler_path}", file=sys.stderr)
         print("Run 'make' first to build the assembler.", file=sys.stderr)
         sys.exit(1)
-    
+
     try:
         result = subprocess.run(
             [assembler_path, input_file],
@@ -137,43 +138,43 @@ def main():
     parser = argparse.ArgumentParser(description='Visualize AST from assembler output')
     parser.add_argument('input', help='Input .asm file')
     parser.add_argument('-o', '--output', help='Output file')
-    parser.add_argument('-f', '--format', default='svg', 
+    parser.add_argument('-f', '--format', default='svg',
                        choices=['png', 'pdf', 'svg'],
                        help='Output format (default: svg)')
     parser.add_argument('--text', action='store_true',
                        help='Print text tree instead of graph')
     parser.add_argument('--view', action='store_true',
                        help='Open the output file after rendering')
-    
+
     args = parser.parse_args()
-    
+
     if not os.path.exists(args.input):
         print(f"Error: input file '{args.input}' not found", file=sys.stderr)
         sys.exit(1)
-    
+
     print(f"Parsing {args.input}...", file=sys.stderr)
     assembler_output = run_assembler(args.input)
-    
+
     nodes, edges = parse_dot_format(assembler_output)
     print(f"Found {len(nodes)} nodes and {len(edges)} edges", file=sys.stderr)
-    
+
     if not nodes:
         print("Error: No nodes found in assembler output", file=sys.stderr)
         sys.exit(1)
-    
+
     if args.text:
         print_text_tree(nodes, edges)
         return
-    
+
     base_name = os.path.splitext(os.path.basename(args.input))[0]
-    
+
     if args.output:
         output_path = args.output
     else:
         output_path = f"{base_name}.{args.format}"
-    
+
     dot_content = generate_dot(nodes, edges)
-    
+
     try:
         result = subprocess.run(
             ['dot', '-T', args.format, '-o', output_path],
@@ -190,7 +191,7 @@ def main():
     except subprocess.CalledProcessError as e:
         print(f"Error running dot: {e.stderr}", file=sys.stderr)
         sys.exit(1)
-    
+
     if args.view:
         import webbrowser
         webbrowser.open('file://' + os.path.abspath(output_path))

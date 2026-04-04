@@ -31,6 +31,7 @@ $BSEARCH_LOOP:
     ; (Assuming you'd set Index Reg to H here)
     LD D, H          ; Get array[mid]
 
+
     CMP D, A         ; Compare array[mid] with Target
     CON 0            ; If Equal
     JMP $FOUND_IT
