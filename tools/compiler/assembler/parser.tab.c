@@ -76,10 +76,17 @@
 #include "ast.h"
 #include "parser.tab.h"
 
-    // boiler plate thins
+    // boiler plate things
 void yyerror(const char *s);
 int yylex(void);
 extern char *yytext;
+
+// external variables for symbolTable
+extern struct hashMap *symbolTable;
+// idk if i should add this
+extern void put(const char *key_str, int val);
+extern void get(const char *key_str);
+extern void freeTable();
 
 astNode *ast_root = NULL;
 int address = 0;
@@ -91,10 +98,39 @@ dataType parse_data_type(const char *s) {
     if (strcmp(s, "str") == 0) return str;
     if (strcmp(s, "bool") == 0) return boolean;
     if (strcmp(s, "char") == 0) return chr;
-    return str; //default
+    return str;
 }
 
-#line 98 "parser.tab.c"
+char *cleanup(int instruction, char *yt, int len) {
+  int newlen;
+  char *res;
+
+  switch (instruction) {
+  case 0: // label definition
+    newlen = len - 2; // to remove the '$' and ':' from the label definition
+    if (newlen < 0)
+      return NULL;
+    res = (char *)malloc(newlen + 1); // newlen for to store the string
+                                      // and +1 to store the null terminator
+    strncpy(res, yt + 1, newlen);
+    res[newlen] = '\0'; // add the terminator
+    break;
+
+  case 1: // lable refernece
+    newlen = len - 1; // to remove the '$' from the label reference
+    if (newlen < 0)
+      return NULL;
+    res = (char *)malloc(newlen + 1); // newlen for to store the string
+                                      // and +1 to store the null terminator
+    strncpy(res, yt + 1, newlen);
+    res[newlen] = '\0'; // add the terminator
+    break;
+  }
+  return res;
+}
+
+
+#line 134 "parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -541,10 +577,10 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    50,    50,    62,    66,    78,    79,    85,    94,    95,
-     111,   117,   126,   127,   128,   129,   130,   134,   143,   144,
-     159,   162,   172,   178,   179,   190,   191,   192,   193,   194,
-     195
+       0,    87,    87,    99,   103,   115,   116,   122,   131,   132,
+     148,   154,   163,   164,   165,   166,   167,   171,   180,   181,
+     196,   201,   211,   217,   218,   229,   230,   233,   234,   235,
+     236
 };
 #endif
 
@@ -1126,7 +1162,7 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* root: sections  */
-#line 50 "parser.y"
+#line 87 "parser.y"
              {
         ast_root = createNode(root);
         astNode *current = (yyvsp[0].node);
@@ -1136,20 +1172,20 @@ yyreduce:
         }
         (yyval.node) = ast_root;
     }
-#line 1140 "parser.tab.c"
+#line 1176 "parser.tab.c"
     break;
 
   case 3: /* sections: section  */
-#line 62 "parser.y"
+#line 99 "parser.y"
             {
         (yyval.node) = (yyvsp[0].node);
         if ((yyval.node) != NULL) (yyval.node)->nextSibling = NULL;
     }
-#line 1149 "parser.tab.c"
+#line 1185 "parser.tab.c"
     break;
 
   case 4: /* sections: sections section  */
-#line 66 "parser.y"
+#line 103 "parser.y"
                        {
         (yyval.node) = (yyvsp[-1].node);
         if ((yyvsp[0].node) != NULL) {
@@ -1160,40 +1196,40 @@ yyreduce:
             last->nextSibling = (yyvsp[0].node);
         }
     }
-#line 1164 "parser.tab.c"
+#line 1200 "parser.tab.c"
     break;
 
   case 5: /* section: data_section  */
-#line 78 "parser.y"
+#line 115 "parser.y"
                       { (yyval.node) = (yyvsp[0].node);}
-#line 1170 "parser.tab.c"
+#line 1206 "parser.tab.c"
     break;
 
   case 6: /* section: inst_section  */
-#line 79 "parser.y"
+#line 116 "parser.y"
                    { (yyval.node) = (yyvsp[0].node); }
-#line 1176 "parser.tab.c"
+#line 1212 "parser.tab.c"
     break;
 
   case 7: /* data_section: DATASEGMENTSTART data_declarations END  */
-#line 85 "parser.y"
+#line 122 "parser.y"
                                            {
         (yyval.node) = createNode(section, "data");
         if ((yyvsp[-1].node) != NULL) {
             addchild((yyval.node), (yyvsp[-1].node));
         }
     }
-#line 1187 "parser.tab.c"
+#line 1223 "parser.tab.c"
     break;
 
   case 8: /* data_declarations: %empty  */
-#line 94 "parser.y"
+#line 131 "parser.y"
            { (yyval.node) = NULL; }
-#line 1193 "parser.tab.c"
+#line 1229 "parser.tab.c"
     break;
 
   case 9: /* data_declarations: data_declarations data_declaration  */
-#line 95 "parser.y"
+#line 132 "parser.y"
                                          {
         if ((yyvsp[-1].node) == NULL) {
             (yyval.node) = (yyvsp[0].node);
@@ -1206,80 +1242,80 @@ yyreduce:
             (yyval.node) = (yyvsp[-1].node);
         }
     }
-#line 1210 "parser.tab.c"
+#line 1246 "parser.tab.c"
     break;
 
   case 10: /* data_declaration: DATA_TYPE IDENTIFIER EQUALS data_value  */
-#line 111 "parser.y"
+#line 148 "parser.y"
                                            {
         (yyval.node) = createNode(dataDeclaration, parse_data_type((yyvsp[-3].str)));
         astNode *idNode = createNode(identifier, (yyvsp[-2].str));
         addchild((yyval.node), idNode);
         addchild((yyval.node), (yyvsp[0].node));
     }
-#line 1221 "parser.tab.c"
+#line 1257 "parser.tab.c"
     break;
 
   case 11: /* data_declaration: DATA_TYPE IDENTIFIER POINTER_EQUALS data_value  */
-#line 117 "parser.y"
+#line 154 "parser.y"
                                                      {
         (yyval.node) = createNode(dataDeclaration, parse_data_type((yyvsp[-3].str)));
         astNode *idNode = createNode(identifier, (yyvsp[-2].str));
         addchild((yyval.node), idNode);
         addchild((yyval.node), (yyvsp[0].node));
     }
-#line 1232 "parser.tab.c"
+#line 1268 "parser.tab.c"
     break;
 
   case 12: /* data_value: NUM  */
-#line 126 "parser.y"
+#line 163 "parser.y"
         { (yyval.node) = createNode(literal, strdup(yytext), (yyvsp[0].num)); }
-#line 1238 "parser.tab.c"
+#line 1274 "parser.tab.c"
     break;
 
   case 13: /* data_value: BIN  */
-#line 127 "parser.y"
+#line 164 "parser.y"
           { (yyval.node) = createNode(literal, strdup(yytext), (yyvsp[0].num)); }
-#line 1244 "parser.tab.c"
+#line 1280 "parser.tab.c"
     break;
 
   case 14: /* data_value: HEX  */
-#line 128 "parser.y"
+#line 165 "parser.y"
           { (yyval.node) = createNode(literal, strdup(yytext), (yyvsp[0].num)); }
-#line 1250 "parser.tab.c"
+#line 1286 "parser.tab.c"
     break;
 
   case 15: /* data_value: STRING_LITERAL  */
-#line 129 "parser.y"
+#line 166 "parser.y"
                      { (yyval.node) = createNode(literal, (yyvsp[0].str), 0); }
-#line 1256 "parser.tab.c"
+#line 1292 "parser.tab.c"
     break;
 
   case 16: /* data_value: IDENTIFIER  */
-#line 130 "parser.y"
+#line 167 "parser.y"
                  { (yyval.node) = createNode(literal, (yyvsp[0].str), 0); }
-#line 1262 "parser.tab.c"
+#line 1298 "parser.tab.c"
     break;
 
   case 17: /* inst_section: INSTSEGMENTSTART lines END  */
-#line 134 "parser.y"
+#line 171 "parser.y"
                                {
         (yyval.node) = createNode(section, "inst");
         if ((yyvsp[-1].node) != NULL) {
             addchild((yyval.node), (yyvsp[-1].node));
         }
     }
-#line 1273 "parser.tab.c"
+#line 1309 "parser.tab.c"
     break;
 
   case 18: /* lines: %empty  */
-#line 143 "parser.y"
+#line 180 "parser.y"
            { (yyval.node) = NULL; }
-#line 1279 "parser.tab.c"
+#line 1315 "parser.tab.c"
     break;
 
   case 19: /* lines: lines line  */
-#line 144 "parser.y"
+#line 181 "parser.y"
                  {
         if ((yyvsp[-1].node) == NULL) {
             (yyval.node) = (yyvsp[0].node);
@@ -1292,19 +1328,21 @@ yyreduce:
             (yyval.node) = (yyvsp[-1].node);
         }
     }
-#line 1296 "parser.tab.c"
+#line 1332 "parser.tab.c"
     break;
 
   case 20: /* line: LABELDEF  */
-#line 159 "parser.y"
+#line 196 "parser.y"
              {
+        put(cleanup(0, yytext,strlen(yytext)), address);
+
         (yyval.node) = createNode(labelDef, (yyvsp[0].str));
     }
-#line 1304 "parser.tab.c"
+#line 1342 "parser.tab.c"
     break;
 
   case 21: /* line: INST operands  */
-#line 162 "parser.y"
+#line 201 "parser.y"
                     {
         (yyval.node) = createNode(instruction, (yyvsp[-1].str));
         astNode *op = (yyvsp[0].node);
@@ -1315,25 +1353,25 @@ yyreduce:
             op = next;
         }
     }
-#line 1319 "parser.tab.c"
+#line 1357 "parser.tab.c"
     break;
 
   case 22: /* line: INST  */
-#line 172 "parser.y"
+#line 211 "parser.y"
            {
         (yyval.node) = createNode(instruction, (yyvsp[0].str));
     }
-#line 1327 "parser.tab.c"
+#line 1365 "parser.tab.c"
     break;
 
   case 23: /* operands: operand  */
-#line 178 "parser.y"
+#line 217 "parser.y"
             { (yyval.node) = (yyvsp[0].node); }
-#line 1333 "parser.tab.c"
+#line 1371 "parser.tab.c"
     break;
 
   case 24: /* operands: operands ',' operand  */
-#line 179 "parser.y"
+#line 218 "parser.y"
                            {
         astNode *last = (yyvsp[-2].node);
         while (last->nextSibling != NULL) {
@@ -1342,47 +1380,49 @@ yyreduce:
         last->nextSibling = (yyvsp[0].node);
         (yyval.node) = (yyvsp[-2].node);
     }
-#line 1346 "parser.tab.c"
+#line 1384 "parser.tab.c"
     break;
 
   case 25: /* operand: REG  */
-#line 190 "parser.y"
+#line 229 "parser.y"
         { (yyval.node) = createNode(reg, (yyvsp[0].str)); }
-#line 1352 "parser.tab.c"
+#line 1390 "parser.tab.c"
     break;
 
   case 26: /* operand: LABELREF  */
-#line 191 "parser.y"
-               { (yyval.node) = createNode(labelRef, (yyvsp[0].str)); }
-#line 1358 "parser.tab.c"
+#line 230 "parser.y"
+               {
+        (yyval.node) = createNode(labelRef, (yyvsp[0].str));
+     }
+#line 1398 "parser.tab.c"
     break;
 
   case 27: /* operand: NUM  */
-#line 192 "parser.y"
+#line 233 "parser.y"
           { (yyval.node) = createNode(literal, strdup(yytext), (yyvsp[0].num)); }
-#line 1364 "parser.tab.c"
+#line 1404 "parser.tab.c"
     break;
 
   case 28: /* operand: BIN  */
-#line 193 "parser.y"
+#line 234 "parser.y"
           { (yyval.node) = createNode(literal, strdup(yytext), (yyvsp[0].num)); }
-#line 1370 "parser.tab.c"
+#line 1410 "parser.tab.c"
     break;
 
   case 29: /* operand: HEX  */
-#line 194 "parser.y"
+#line 235 "parser.y"
           { (yyval.node) = createNode(literal, strdup(yytext), (yyvsp[0].num)); }
-#line 1376 "parser.tab.c"
+#line 1416 "parser.tab.c"
     break;
 
   case 30: /* operand: STRING_LITERAL  */
-#line 195 "parser.y"
+#line 236 "parser.y"
                      { (yyval.node) = createNode(literal, (yyvsp[0].str), 0); }
-#line 1382 "parser.tab.c"
+#line 1422 "parser.tab.c"
     break;
 
 
-#line 1386 "parser.tab.c"
+#line 1426 "parser.tab.c"
 
       default: break;
     }
@@ -1575,7 +1615,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 198 "parser.y"
+#line 239 "parser.y"
 
 
 void yyerror(const char *s) {

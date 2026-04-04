@@ -43,9 +43,9 @@ void printSymbolTable() {
     return;
   }
   HASH_ITER(hh, symbolTable, current, temp) {
-    printf("Lable: %s \t Addr: %d\n", current->key, current->value);
+    printf("Label: %s \t Addr: %d\n", current->key, current->value);
   }
-  printf("----------------\n");
+  printf("--------------------\n");
 }
 
 void get(const char *key_str) {
@@ -75,10 +75,6 @@ int main(int argc, char **argv) {
     printf("Usage: %s <input.asm>\n", argv[0]);
     return 1;
   }
-
-  put("test", 12);
-  put("testt", 123);
-  put("testtt", 1234);
 
   yyin = fopen(argv[1], "r");
   if (!yyin) {

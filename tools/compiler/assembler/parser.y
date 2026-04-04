@@ -30,20 +30,37 @@ dataType parse_data_type(const char *s) {
     if (strcmp(s, "char") == 0) return chr;
     return str;
 }
+
+char *cleanup(int instruction, char *yt, int len) {
+  int newlen;
+  char *res;
+
+  switch (instruction) {
+  case 0: // label definition
+    newlen = len - 2; // to remove the '$' and ':' from the label definition
+    if (newlen < 0)
+      return NULL;
+    res = (char *)malloc(newlen + 1); // newlen for to store the string
+                                      // and +1 to store the null terminator
+    strncpy(res, yt + 1, newlen);
+    res[newlen] = '\0'; // add the terminator
+    break;
+
+  case 1: // lable refernece
+    newlen = len - 1; // to remove the '$' from the label reference
+    if (newlen < 0)
+      return NULL;
+    res = (char *)malloc(newlen + 1); // newlen for to store the string
+                                      // and +1 to store the null terminator
+    strncpy(res, yt + 1, newlen);
+    res[newlen] = '\0'; // add the terminator
+    break;
+  }
+  return res;
+}
+
 %}
 
-char* lableName(const char *inputString, int type){
-    switch (type) {
-        case 0:
-            break;
-        case 1:
-            break;
-    }
-    size_t len = strlen(s) - 2;
-    char* newString = malloc(len);
-    if (newString) {
-    }
-}
 
 // union to differentiate operands
 %union {
@@ -177,7 +194,7 @@ lines:
 
 line:
     LABELDEF {
-        put();
+        put(cleanup(0, yytext,strlen(yytext)), address);
 
         $$ = createNode(labelDef, $1);
     }
@@ -210,7 +227,9 @@ operands:
 
 operand:
     REG { $$ = createNode(reg, $1); }
-    | LABELREF { $$ = createNode(labelRef, $1); }
+    | LABELREF {
+        $$ = createNode(labelRef, $1);
+     }
     | NUM { $$ = createNode(literal, strdup(yytext), $1); }
     | BIN { $$ = createNode(literal, strdup(yytext), $1); }
     | HEX { $$ = createNode(literal, strdup(yytext), $1); }
