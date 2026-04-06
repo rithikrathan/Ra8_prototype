@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 astNode *createNode(nodeType type, ...) {
   astNode *node = (astNode *)malloc(sizeof(astNode));
@@ -146,6 +147,9 @@ void print_node_json(astNode *node, FILE *out, int *node_id, int parent_id) {
                                         : "(nil)");
     break;
   case labelDef:
+    fprintf(out, "\\nname: %s",
+            node->as.label.name ? node->as.label.name : "(nil)");
+    break;
   case labelRef:
     fprintf(out, "\\nname: %s",
             node->as.label.name ? node->as.label.name : "(nil)");
@@ -187,6 +191,7 @@ void print_node_json(astNode *node, FILE *out, int *node_id, int parent_id) {
 }
 
 void print_ast_json(astNode *node, FILE *out) {
+  printf("helo\n");
   if (node == NULL) {
     fprintf(out, "{\n  \"nodes\": [],\n  \"edges\": []\n}\n");
     return;

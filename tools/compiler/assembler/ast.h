@@ -78,6 +78,7 @@ typedef struct astNode {
 void addchild(astNode *parent, astNode *child);
 astNode *createNode(nodeType type, ...);
 void freeNode(astNode *node);
+void freeNodeRecursive(astNode *node);
 void print_ast_json(astNode *node, FILE *out);
 
 #endif // !AST_H

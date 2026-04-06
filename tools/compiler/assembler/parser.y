@@ -19,7 +19,8 @@ extern void get(const char *key_str);
 extern void freeTable();
 
 astNode *ast_root = NULL;
-int address = 0;
+int address = 0; // still needs to handle address calculation
+                 // take care of it when implementing the code generation part
 
 dataType parse_data_type(const char *s) {
     if (strcmp(s, "int8") == 0) return int8;
@@ -117,7 +118,6 @@ section: data_section { $$ = $1;}
     ;
 
 
-// this one works correctly
 data_section:
     DATASEGMENTSTART data_declarations END {
         $$ = createNode(section, "data");
@@ -143,7 +143,6 @@ data_declarations:
     }
     ;
 
-// this is clearly not a problem
 data_declaration:
     DATA_TYPE IDENTIFIER EQUALS data_value {
         $$ = createNode(dataDeclaration, parse_data_type($1));
@@ -194,9 +193,10 @@ lines:
 
 line:
     LABELDEF {
-        put(cleanup(0, yytext,strlen(yytext)), address);
+        char *cleanName = cleanup(0, $1, strlen($1));
+        put(cleanName, address);
 
-        $$ = createNode(labelDef, $1);
+        $$ = createNode(labelDef, cleanName);
     }
     | INST operands {
         $$ = createNode(instruction, $1);
@@ -228,7 +228,7 @@ operands:
 operand:
     REG { $$ = createNode(reg, $1); }
     | LABELREF {
-        $$ = createNode(labelRef, $1);
+        $$ = createNode(labelRef, cleanup(1, $1, strlen($1)));
      }
     | NUM { $$ = createNode(literal, strdup(yytext), $1); }
     | BIN { $$ = createNode(literal, strdup(yytext), $1); }
