@@ -16,8 +16,8 @@ $(PARSER_OUT) $(PARSER_HDR): $(PARSER)
 $(LEX_OUT): $(LEXER)
 	$(FLEX) $(LEXER)
 
-$(OUTPUT): assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c semanticAnalyser.c
-	$(CC) assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c semanticAnalyser.c -o $(OUTPUT)
+$(OUTPUT): assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c
+	$(CC) assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c  -o $(OUTPUT)
 
 run: $(OUTPUT)
 	./$(OUTPUT) test.asm

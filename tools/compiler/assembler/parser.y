@@ -32,6 +32,13 @@ dataType parse_data_type(const char *s) {
     return str;
 }
 
+int isValid(char*  identifier)}{
+    const char* ignoreList[] = {
+    };
+
+    return 1;
+}
+
 char *cleanup(int instruction, char *yt, int len) {
   int newlen;
   char *res;
@@ -42,8 +49,8 @@ char *cleanup(int instruction, char *yt, int len) {
     if (newlen < 0)
       return NULL;
     res = (char *)malloc(newlen + 1); // newlen for to store the string
-                                      // and +1 to store the null terminator
     strncpy(res, yt + 1, newlen);
+                                      // and +1 to store the null terminator
     res[newlen] = '\0'; // add the terminator
     break;
 
@@ -145,6 +152,7 @@ data_declarations:
 
 data_declaration:
     DATA_TYPE IDENTIFIER EQUALS data_value {
+
         $$ = createNode(dataDeclaration, parse_data_type($1));
         astNode *idNode = createNode(identifier, $2);
         addchild($$, idNode);
