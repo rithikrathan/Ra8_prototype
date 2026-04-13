@@ -1,0 +1,282 @@
+[
+  {
+    "opcode": "nope",
+    "size": "1",
+    "operands": "0",
+    "machineCode": "1",
+    "comment": "no operation"
+  },
+  {
+    "opcode": "hlt",
+    "size": "1",
+    "operands": "0",
+    "machineCode": "2",
+    "comment": "halt"
+  },
+  {
+    "opcode": "add",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "3",
+    "comment": "addition"
+  },
+  {
+    "opcode": "adi",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "4",
+    "comment": "add immediate"
+  },
+  {
+    "opcode": "addc",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "5",
+    "comment": "add with carry"
+  },
+  {
+    "opcode": "sub",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "6",
+    "comment": "subtraction"
+  },
+  {
+    "opcode": "sui",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "7",
+    "comment": "subtract immediate"
+  },
+  {
+    "opcode": "subb",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "8",
+    "comment": "subtract with borrow"
+  },
+  {
+    "opcode": "and",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "9",
+    "comment": "and"
+  },
+  {
+    "opcode": "ani",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "10",
+    "comment": "and immediate"
+  },
+  {
+    "opcode": "or",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "11",
+    "comment": "or"
+  },
+  {
+    "opcode": "ori",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "12",
+    "comment": "or immediate"
+  },
+  {
+    "opcode": "not",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "13",
+    "comment": "not"
+  },
+  {
+    "opcode": "xor",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "14",
+    "comment": "xor"
+  },
+  {
+    "opcode": "xri",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "15",
+    "comment": "xor immediate"
+  },
+  {
+    "opcode": "xnr",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "16",
+    "comment": "xnor"
+  },
+  {
+    "opcode": "xni",
+    "size": "3",
+    "operands": "3",
+    "machineCode": "17",
+    "comment": "xnor immediate"
+  },
+  {
+    "opcode": "iin",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "18",
+    "comment": "increment index"
+  },
+  {
+    "opcode": "din",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "19",
+    "comment": "decrement index"
+  },
+  {
+    "opcode": "cmp",
+    "size": "2",
+    "operands": "2",
+    "machineCode": "20",
+    "comment": "compare"
+  },
+  {
+    "opcode": "rs",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "21",
+    "comment": "right shift"
+  },
+  {
+    "opcode": "ls",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "22",
+    "comment": "left shift"
+  },
+  {
+    "opcode": "rr",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "23",
+    "comment": "right rotate"
+  },
+  {
+    "opcode": "lr",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "24",
+    "comment": "left rotate"
+  },
+  {
+    "opcode": "ars",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "25",
+    "comment": "arithmetic right rotate/shift"
+  },
+  {
+    "opcode": "mv",
+    "size": "2",
+    "operands": "2",
+    "machineCode": "26",
+    "comment": "move register values"
+  },
+  {
+    "opcode": "ld",
+    "size": "4",
+    "operands": "2",
+    "machineCode": "27",
+    "comment": "load from memory"
+  },
+  {
+    "opcode": "ldi",
+    "size": "4",
+    "operands": "2",
+    "machineCode": "28",
+    "comment": "load immediate"
+  },
+  {
+    "opcode": "st",
+    "size": "4",
+    "operands": "2",
+    "machineCode": "29",
+    "comment": "store to memory"
+  },
+  {
+    "opcode": "sti",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "30",
+    "comment": "store immediate"
+  },
+  {
+    "opcode": "lin",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "31",
+    "comment": "load index register 16 bit SI/DI indirect"
+  },
+  {
+    "opcode": "sin",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "32",
+    "comment": "store index register 16 bit SI/DI indirect"
+  },
+  {
+    "opcode": "rin",
+    "size": "3",
+    "operands": "2",
+    "machineCode": "33",
+    "comment": "load [Rh|Rl] pair to index reg"
+  },
+  {
+    "opcode": "rpc",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "34",
+    "comment": "register pair to PC"
+  },
+  {
+    "opcode": "rsp",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "35",
+    "comment": "register pair to SP"
+  },
+  {
+    "opcode": "con",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "36",
+    "comment": "check single flag including 0 for no condition"
+  },
+  {
+    "opcode": "cor",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "37",
+    "comment": "check if any (input - flag mask)"
+  },
+  {
+    "opcode": "can",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "38",
+    "comment": "check if all (input - flag mask)"
+  },
+  {
+    "opcode": "jmp",
+    "size": "3",
+    "operands": "1",
+    "machineCode": "39",
+    "comment": "jump"
+  },
+  {
+    "opcode": "set",
+    "size": "2",
+    "operands": "1",
+    "machineCode": "40",
+    "comment": "set flag"
+  }
+]

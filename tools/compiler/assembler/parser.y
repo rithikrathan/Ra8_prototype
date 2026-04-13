@@ -32,10 +32,23 @@ dataType parse_data_type(const char *s) {
     return str;
 }
 
-int isValid(char*  identifier)}{
+int isValid(const char *str) {
     const char* ignoreList[] = {
+        "nope", "hlt", "add", "adi", "addc", "sub", "sui", "subb", "and", "ani",
+        "or", "ori", "not", "xor", "xri", "xnr", "xni", "iin", "din", "cmp", "rs",
+        "ls", "rr", "lr", "ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin", "rin",
+        "rpc", "rsp", "con", "cor", "can", "jmp", "set"
+        "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
+        "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
+        "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
+        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET"
     };
 
+    for (int i = 0; ignoreList[i] != NULL; i++) {
+        if (strcmp(str, ignoreList[i]) == 0) {
+            return 0;
+        };
+    }
     return 1;
 }
 
@@ -152,17 +165,24 @@ data_declarations:
 
 data_declaration:
     DATA_TYPE IDENTIFIER EQUALS data_value {
-
-        $$ = createNode(dataDeclaration, parse_data_type($1));
-        astNode *idNode = createNode(identifier, $2);
-        addchild($$, idNode);
-        addchild($$, $4);
+        if (isValid($2)) {
+            $$ = createNode(dataDeclaration, parse_data_type($1));
+            astNode *idNode = createNode(identifier, $2);
+            addchild($$, idNode);
+            addchild($$, $4);
+        } else {
+            yyerror("Reserved words cannot be used as an identifier");
+        }
     }
     | DATA_TYPE IDENTIFIER POINTER_EQUALS data_value {
-        $$ = createNode(dataDeclaration, parse_data_type($1));
-        astNode *idNode = createNode(identifier, $2);
-        addchild($$, idNode);
-        addchild($$, $4);
+        if (isValid($2)) {
+            $$ = createNode(dataDeclaration, parse_data_type($1));
+            astNode *idNode = createNode(identifier, $2);
+            addchild($$, idNode);
+            addchild($$, $4);
+        } else {
+            yyerror("Reserved words cannot be used as an identifier");
+        }
     }
     ;
 

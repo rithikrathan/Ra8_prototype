@@ -7,12 +7,27 @@
 
 int inDataSection = 0;
 
-const char *instructions[] = {
-    "ADD", "ADI",  "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI", "OR",
-    "ORI", "NOT",  "XOR",  "XRI", "XNR", "XNI",  "IIN", "DIN", "CMP",
-    "RS",  "LS",   "RR",   "LR",  "ARS", "MV",   "LD",  "LDI", "ST",
-    "STI", "LIN",  "SIN",  "RIN", "RPC", "RSP",  "CON", "COR", "CAN",
-    "JMP", "NOPE", "HLT",  "SET", NULL
+// const char *instructions[] = {
+//     "ADD", "ADI",  "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI", "OR",
+//     "ORI", "NOT",  "XOR",  "XRI", "XNR", "XNI",  "IIN", "DIN", "CMP",
+//     "RS",  "LS",   "RR",   "LR",  "ARS", "MV",   "LD",  "LDI", "ST",
+//     "STI", "LIN",  "SIN",  "RIN", "RPC", "RSP",  "CON", "COR", "CAN",
+//     "JMP", "NOPE", "HLT",  "SET" "add", "adi",  "addc", "sub", "sui",
+//     "subb", "and", "ani", "or", "ori", "not",  "xor",  "xri", "xnr",
+//     "xni",  "iin", "din", "cmp", "rs",  "ls",   "rr",   "lr",  "ars",
+//     "mv",   "ld",  "ldi", "st", "sti", "lin",  "sin",  "rin", "rpc",
+//     "rsp",  "con", "cor", "can", "jmp", "nope", "hlt",  "set", NULL
+// };
+
+const char* instructions[] = {
+        "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
+        "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
+        "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
+        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET"
+        "nope", "hlt", "add", "adi", "addc", "sub", "sui", "subb", "and", "ani",
+        "or", "ori", "not", "xor", "xri", "xnr", "xni", "iin", "din", "cmp", "rs",
+        "ls", "rr", "lr", "ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin", "rin",
+        "rpc", "rsp", "con", "cor", "can", "jmp", "set", NULL
 };
 
 const char *dataTypes[] = {
@@ -78,23 +93,23 @@ char *strdup_custom(const char *s) {
     return STRING_LITERAL;
 }
 
-"[__data__]" { 
+"[__data__]" {
     inDataSection = 1;
-    return DATASEGMENTSTART; 
+    return DATASEGMENTSTART;
 }
 
-"[__inst__]" { 
+"[__inst__]" {
     inDataSection = 0;
-    return INSTSEGMENTSTART; 
+    return INSTSEGMENTSTART;
 }
 
 "=" { return EQUALS; }
 
 "*=" { return POINTER_EQUALS; }
 
-"end" { 
+"end" {
     inDataSection = 0;
-    return END; 
+    return END;
 }
 
 "$"[a-zA-Z_][a-zA-Z0-9_]*":" {

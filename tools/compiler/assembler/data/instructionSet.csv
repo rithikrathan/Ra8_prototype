@@ -1,0 +1,41 @@
+opcode, size, machineCode, comment
+nope  ,1,1, no operation
+hlt   ,1,2, halt
+add   ,3,3, addition
+adi   ,3,4, add immediate
+addc  ,3,5, add with carry
+sub   ,3,6, subtraction
+sui   ,3,7, subtract immediate
+subb  ,3,8, subtract with borrow
+and   ,3,9, and
+ani   ,3,10, and immediate
+or    ,3,11, or
+ori   ,3,12, or immediate
+not   ,2,13, not
+xor   ,3,14, xor
+xri   ,3,15, xor immediate
+xnr   ,3,16, xnor
+xni   ,3,17, xnor immediate
+iin   ,2,18, increment index
+din   ,2,19, decrement index
+cmp   ,1,20, compare
+rs    ,1,21, right shift
+ls    ,1,22, left shift
+rr    ,1,23, right rotate
+lr    ,1,24, left rotate
+ars   ,1,25, arithmetic right rotate/shift
+mv    ,2,26, move register values
+ld    ,4,27, load from memory
+ldi   ,4,28, load immediate
+st    ,4,29, store to memory
+sti   ,2,30, store immediate
+lin   ,2,31, load index register 16 bit SI/DI indirect
+sin   ,2,32, store index register 16 bit SI/DI indirect
+rin   ,3,33, load [Rh|Rl] pair to index reg
+rpc   ,2,34, register pair to PC
+rsp   ,2,35, register pair to SP
+con   ,2,36, check single flag including 0 for no condition
+cor   ,2,37, check if any (input - flag mask)
+can   ,2,38, check if all (input - flag mask)
+jmp   ,1,39, jump
+set   ,2,40, set flag
