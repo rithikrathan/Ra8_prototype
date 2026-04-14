@@ -2,281 +2,281 @@
   {
     "opcode": "nope",
     "size": "1",
-    "operands": "0",
     "machineCode": "1",
-    "comment": "no operation"
+    "comment": "no operation",
+    "operandCount": ""
   },
   {
     "opcode": "hlt",
     "size": "1",
-    "operands": "0",
     "machineCode": "2",
-    "comment": "halt"
+    "comment": "halt",
+    "operandCount": ""
   },
   {
     "opcode": "add",
     "size": "3",
-    "operands": "3",
     "machineCode": "3",
-    "comment": "addition"
+    "comment": "addition",
+    "operandCount": ""
   },
   {
     "opcode": "adi",
     "size": "3",
-    "operands": "3",
     "machineCode": "4",
-    "comment": "add immediate"
+    "comment": "add immediate",
+    "operandCount": ""
   },
   {
     "opcode": "addc",
     "size": "3",
-    "operands": "3",
     "machineCode": "5",
-    "comment": "add with carry"
+    "comment": "add with carry",
+    "operandCount": ""
   },
   {
     "opcode": "sub",
     "size": "3",
-    "operands": "3",
     "machineCode": "6",
-    "comment": "subtraction"
+    "comment": "subtraction",
+    "operandCount": ""
   },
   {
     "opcode": "sui",
     "size": "3",
-    "operands": "3",
     "machineCode": "7",
-    "comment": "subtract immediate"
+    "comment": "subtract immediate",
+    "operandCount": ""
   },
   {
     "opcode": "subb",
     "size": "3",
-    "operands": "3",
     "machineCode": "8",
-    "comment": "subtract with borrow"
+    "comment": "subtract with borrow",
+    "operandCount": ""
   },
   {
     "opcode": "and",
     "size": "3",
-    "operands": "3",
     "machineCode": "9",
-    "comment": "and"
+    "comment": "and",
+    "operandCount": ""
   },
   {
     "opcode": "ani",
     "size": "3",
-    "operands": "3",
     "machineCode": "10",
-    "comment": "and immediate"
+    "comment": "and immediate",
+    "operandCount": ""
   },
   {
     "opcode": "or",
     "size": "3",
-    "operands": "3",
     "machineCode": "11",
-    "comment": "or"
+    "comment": "or",
+    "operandCount": ""
   },
   {
     "opcode": "ori",
     "size": "3",
-    "operands": "3",
     "machineCode": "12",
-    "comment": "or immediate"
+    "comment": "or immediate",
+    "operandCount": ""
   },
   {
     "opcode": "not",
     "size": "2",
-    "operands": "1",
     "machineCode": "13",
-    "comment": "not"
+    "comment": "not",
+    "operandCount": ""
   },
   {
     "opcode": "xor",
     "size": "3",
-    "operands": "3",
     "machineCode": "14",
-    "comment": "xor"
+    "comment": "xor",
+    "operandCount": ""
   },
   {
     "opcode": "xri",
     "size": "3",
-    "operands": "3",
     "machineCode": "15",
-    "comment": "xor immediate"
+    "comment": "xor immediate",
+    "operandCount": ""
   },
   {
     "opcode": "xnr",
     "size": "3",
-    "operands": "3",
     "machineCode": "16",
-    "comment": "xnor"
+    "comment": "xnor",
+    "operandCount": ""
   },
   {
     "opcode": "xni",
     "size": "3",
-    "operands": "3",
     "machineCode": "17",
-    "comment": "xnor immediate"
+    "comment": "xnor immediate",
+    "operandCount": ""
   },
   {
     "opcode": "iin",
     "size": "2",
-    "operands": "1",
     "machineCode": "18",
-    "comment": "increment index"
+    "comment": "increment index",
+    "operandCount": ""
   },
   {
     "opcode": "din",
     "size": "2",
-    "operands": "1",
     "machineCode": "19",
-    "comment": "decrement index"
+    "comment": "decrement index",
+    "operandCount": ""
   },
   {
     "opcode": "cmp",
-    "size": "2",
-    "operands": "2",
+    "size": "1",
     "machineCode": "20",
-    "comment": "compare"
+    "comment": "compare",
+    "operandCount": ""
   },
   {
     "opcode": "rs",
-    "size": "2",
-    "operands": "1",
+    "size": "1",
     "machineCode": "21",
-    "comment": "right shift"
+    "comment": "right shift",
+    "operandCount": ""
   },
   {
     "opcode": "ls",
-    "size": "2",
-    "operands": "1",
+    "size": "1",
     "machineCode": "22",
-    "comment": "left shift"
+    "comment": "left shift",
+    "operandCount": ""
   },
   {
     "opcode": "rr",
-    "size": "2",
-    "operands": "1",
+    "size": "1",
     "machineCode": "23",
-    "comment": "right rotate"
+    "comment": "right rotate",
+    "operandCount": ""
   },
   {
     "opcode": "lr",
-    "size": "2",
-    "operands": "1",
+    "size": "1",
     "machineCode": "24",
-    "comment": "left rotate"
+    "comment": "left rotate",
+    "operandCount": ""
   },
   {
     "opcode": "ars",
-    "size": "2",
-    "operands": "1",
+    "size": "1",
     "machineCode": "25",
-    "comment": "arithmetic right rotate/shift"
+    "comment": "arithmetic right rotate/shift",
+    "operandCount": ""
   },
   {
     "opcode": "mv",
     "size": "2",
-    "operands": "2",
     "machineCode": "26",
-    "comment": "move register values"
+    "comment": "move register values",
+    "operandCount": ""
   },
   {
     "opcode": "ld",
     "size": "4",
-    "operands": "2",
     "machineCode": "27",
-    "comment": "load from memory"
+    "comment": "load from memory",
+    "operandCount": ""
   },
   {
     "opcode": "ldi",
     "size": "4",
-    "operands": "2",
     "machineCode": "28",
-    "comment": "load immediate"
+    "comment": "load immediate",
+    "operandCount": ""
   },
   {
     "opcode": "st",
     "size": "4",
-    "operands": "2",
     "machineCode": "29",
-    "comment": "store to memory"
+    "comment": "store to memory",
+    "operandCount": ""
   },
   {
     "opcode": "sti",
     "size": "2",
-    "operands": "1",
     "machineCode": "30",
-    "comment": "store immediate"
+    "comment": "store immediate",
+    "operandCount": ""
   },
   {
     "opcode": "lin",
     "size": "2",
-    "operands": "1",
     "machineCode": "31",
-    "comment": "load index register 16 bit SI/DI indirect"
+    "comment": "load index register 16 bit SI/DI indirect",
+    "operandCount": ""
   },
   {
     "opcode": "sin",
     "size": "2",
-    "operands": "1",
     "machineCode": "32",
-    "comment": "store index register 16 bit SI/DI indirect"
+    "comment": "store index register 16 bit SI/DI indirect",
+    "operandCount": ""
   },
   {
     "opcode": "rin",
     "size": "3",
-    "operands": "2",
     "machineCode": "33",
-    "comment": "load [Rh|Rl] pair to index reg"
+    "comment": "load [Rh|Rl] pair to index reg",
+    "operandCount": ""
   },
   {
     "opcode": "rpc",
     "size": "2",
-    "operands": "1",
     "machineCode": "34",
-    "comment": "register pair to PC"
+    "comment": "register pair to PC",
+    "operandCount": ""
   },
   {
     "opcode": "rsp",
     "size": "2",
-    "operands": "1",
     "machineCode": "35",
-    "comment": "register pair to SP"
+    "comment": "register pair to SP",
+    "operandCount": ""
   },
   {
     "opcode": "con",
     "size": "2",
-    "operands": "1",
     "machineCode": "36",
-    "comment": "check single flag including 0 for no condition"
+    "comment": "check single flag including 0 for no condition",
+    "operandCount": ""
   },
   {
     "opcode": "cor",
     "size": "2",
-    "operands": "1",
     "machineCode": "37",
-    "comment": "check if any (input - flag mask)"
+    "comment": "check if any (input - flag mask)",
+    "operandCount": ""
   },
   {
     "opcode": "can",
     "size": "2",
-    "operands": "1",
     "machineCode": "38",
-    "comment": "check if all (input - flag mask)"
+    "comment": "check if all (input - flag mask)",
+    "operandCount": ""
   },
   {
     "opcode": "jmp",
-    "size": "3",
-    "operands": "1",
+    "size": "1",
     "machineCode": "39",
-    "comment": "jump"
+    "comment": "jump",
+    "operandCount": ""
   },
   {
     "opcode": "set",
     "size": "2",
-    "operands": "1",
     "machineCode": "40",
-    "comment": "set flag"
+    "comment": "set flag",
+    "operandCount": ""
   }
 ]

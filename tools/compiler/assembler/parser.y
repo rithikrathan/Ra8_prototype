@@ -1,5 +1,7 @@
 %{
     // inlcudes
+    // lets just assume the instructions are always correct and proceed with the
+    // assembly due to less time i will be spending wtih this
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,17 +12,9 @@
 void yyerror(const char *s);
 int yylex(void);
 extern char *yytext;
-
-// external variables for symbolTable
-extern struct hashMap *symbolTable;
-// idk if i should add this
-extern void put(const char *key_str, int val);
-extern void get(const char *key_str);
-extern void freeTable();
+extern int yylineno;
 
 astNode *ast_root = NULL;
-int address = 0; // still needs to handle address calculation
-                 // take care of it when implementing the code generation part
 
 dataType parse_data_type(const char *s) {
     if (strcmp(s, "int8") == 0) return int8;
@@ -37,11 +31,11 @@ int isValid(const char *str) {
         "nope", "hlt", "add", "adi", "addc", "sub", "sui", "subb", "and", "ani",
         "or", "ori", "not", "xor", "xri", "xnr", "xni", "iin", "din", "cmp", "rs",
         "ls", "rr", "lr", "ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin", "rin",
-        "rpc", "rsp", "con", "cor", "can", "jmp", "set"
+        "rpc", "rsp", "con", "cor", "can", "jmp", "set",
         "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
         "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
         "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
-        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET"
+        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET", NULL
     };
 
     for (int i = 0; ignoreList[i] != NULL; i++) {
@@ -172,6 +166,7 @@ data_declaration:
             addchild($$, $4);
         } else {
             yyerror("Reserved words cannot be used as an identifier");
+            YYERROR;
         }
     }
     | DATA_TYPE IDENTIFIER POINTER_EQUALS data_value {
@@ -182,6 +177,7 @@ data_declaration:
             addchild($$, $4);
         } else {
             yyerror("Reserved words cannot be used as an identifier");
+            YYERROR;
         }
     }
     ;
@@ -222,8 +218,6 @@ lines:
 line:
     LABELDEF {
         char *cleanName = cleanup(0, $1, strlen($1));
-        put(cleanName, address);
-
         $$ = createNode(labelDef, cleanName);
     }
     | INST operands {
@@ -267,5 +261,5 @@ operand:
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Parse error: %s\n", s);
+    fprintf(stderr, "line: %d => Parse error: %s\n",yylineno,s);
 }

@@ -7,6 +7,12 @@
 extern int yyparse();
 extern FILE *yyin;
 extern astNode *ast_root;
+extern astNode *getNextNode();
+extern char *yytext;
+
+astNode *curr;
+astNode *next;
+int address = 0;
 
 struct hashMap {
   char *key;
@@ -38,8 +44,8 @@ void printSymbolTable() {
   struct hashMap *current, *temp;
   unsigned int symbolCount = HASH_COUNT(symbolTable);
   printf("\n---[SYMBOL TABLE]---\n");
+  printf("symbolTable is empty\n");
   if (symbolCount == 0) {
-    printf("symbolTable is empty\n");
     return;
   }
   HASH_ITER(hh, symbolTable, current, temp) {
@@ -67,6 +73,26 @@ void free_table() {
     free(current->key); // Don't forget to free the strdup'd key!
     free(current);      // Free the struct
   }
+}
+
+// void getNextNode() {
+//   // traverses the ast and return next node
+// }
+
+void firstPass() {
+  // go throught the ast and set the symbolTable
+  // and expand macros in the future
+  while (1) {
+    curr = getNextNode();
+    // address calculation
+    if (curr->type == labelDef) {
+      put(yytext, address);
+    }
+  }
+}
+
+void secondPass() {
+  // code generation
 }
 
 // main function
