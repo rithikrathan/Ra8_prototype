@@ -2,41 +2,26 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "ast.h"
 #include "parser.tab.h"
 
 int inDataSection = 0;
 
-// const char *instructions[] = {
-//     "ADD", "ADI",  "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI", "OR",
-//     "ORI", "NOT",  "XOR",  "XRI", "XNR", "XNI",  "IIN", "DIN", "CMP",
-//     "RS",  "LS",   "RR",   "LR",  "ARS", "MV",   "LD",  "LDI", "ST",
-//     "STI", "LIN",  "SIN",  "RIN", "RPC", "RSP",  "CON", "COR", "CAN",
-//     "JMP", "NOPE", "HLT",  "SET", "add", "adi",  "addc", "sub", "sui",
-//     "subb", "and", "ani", "or", "ori", "not",  "xor",  "xri", "xnr",
-//     "xni",  "iin", "din", "cmp", "rs",  "ls",   "rr",   "lr",  "ars",
-//     "mv",   "ld",  "ldi", "st", "sti", "lin",  "sin",  "rin", "rpc",
-//     "rsp",  "con", "cor", "can", "jmp", "nope", "hlt",  "set", NULL
-// };
-
 const char* instructions[] = {
-        "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
-        "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
-        "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
-        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET",
-        "nope", "hlt", "add", "adi", "addc", "sub", "sui", "subb", "and", "ani",
-        "or", "ori", "not", "xor", "xri", "xnr", "xni", "iin", "din", "cmp", "rs",
-        "ls", "rr", "lr", "ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin", "rin",
-        "rpc", "rsp", "con", "cor", "can", "jmp", "set", NULL
+    "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
+    "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
+    "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
+    "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET", NULL
 };
 
 const char *dataTypes[] = {
-    "int8", "int16", "str", "bool", "char", NULL
+    "INT8", "INT16", "STR", "BOOL", "CHAR", NULL
 };
 
 int is_instruction(const char *str) {
     for (int i = 0; instructions[i] != NULL; i++) {
-        if (strcmp(str, instructions[i]) == 0) {
+        if (strcasecmp(str, instructions[i]) == 0) {
             return 1;
         }
     }
@@ -45,7 +30,20 @@ int is_instruction(const char *str) {
 
 int is_dataType(const char *str) {
     for (int i = 0; dataTypes[i] != NULL; i++) {
-        if (strcmp(str, dataTypes[i]) == 0) {
+        if (strcasecmp(str, dataTypes[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int is_register(const char *str) {
+    static const char *registers[] = {
+        "A", "B", "C", "D", "E", "F", "G", "H",
+        "SI", "DI", "RNG", "TEMPH", "TEMPL", NULL
+    };
+    for (int i = 0; registers[i] != NULL; i++) {
+        if (strcasecmp(str, registers[i]) == 0) {
             return 1;
         }
     }
@@ -136,7 +134,7 @@ char *strdup_custom(const char *s) {
         yylval.str = strdup_custom(yytext);
         return DATA_TYPE;
     }
-    if (strlen(yytext) == 1 && yytext[0] >= 'A' && yytext[0] <= 'H') {
+    if (is_register(yytext)) {
         yylval.str = strdup_custom(yytext);
         return REG;
     }

@@ -1,24 +1,12 @@
-// FUCK CANCER
-// i dont know golang, there may be a lot of optimisations can be dont but im not gonna do that
-// also im too lazy to implemnt instructions that happen in multiple stages so i broken them down
-//
-//	individual instructions, and have this abstraction where we use macros as instructions and the
-//
-// code is assembled int these individual instructions, ik im too lazy to implemnt that in hardware
-// that is a bit faster when executing, meh we are not trying to make a computers to solve computation
-// probems are we?? thats rhetorical no im not
 package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
-// =-=-=-=-=-=-=[GLOBAL VARIABLES]=-=-=-=-=-=-
-var registerCount = 13
-
 // =-=-=-=-=-=-=[DEFINE NECESSARY THINGS]=-=-=-=-=-=-
+
 // flags struct
 type Flags uint8
 
@@ -127,24 +115,15 @@ type OpData struct {
 
 // main processor struct
 type Ra8 struct {
-	// General purpose registers
-	A byte `json:"regA"` // index: 0
-	B byte `json:"regB"` // index: 1
-	C byte `json:"regC"` // index: 2
-	D byte `json:"regD"` // index: 3
-	E byte `json:"regE"` // index: 4
-	F byte `json:"regF"` // index: 5
-	G byte `json:"regG"` // index: 6
-	H byte `json:"regH"` // index: 7
+	// General purpose registers (indices 0-7)
+	A, B, C, D, E, F, G, H byte `json:"gp_registers"`
 
-	Templ byte `json:"tl"`  // index: 8
-	Temph byte `json:"th"`  // index: 9
-	Rng   byte `json:"rng"` // index: 10
-
-	//NOTE: temph and templ are multiplexers that feed high and low bytes
-	//        of pc to databus used in place of registers
-	//        edit: me from the future no thise are special registers now that work just like
-	//        regular rgisters but cannot be used to perfom ALU operations, also output to address bus collectively
+	// Special registers (indices 8-12)
+	Si    byte `json:"si"`  // Source Index (8)
+	Di    byte `json:"di"`  // Destination Index (9)
+	Rng   byte `json:"rng"` // Random number (10)
+	Temph byte `json:"th"`  // Temp High (11)
+	Templ byte `json:"tl"`  // Temp Low (12)
 
 	// Special purpose registers
 	ProgramCounter   uint16 `json:"program_counter"`
@@ -163,17 +142,15 @@ type Ra8 struct {
 	PipelineReg1        byte `json:"pipeline_reg_1"`
 	PipelineReg2        byte `json:"pipeline_reg_2"`
 	PipelineReg3        byte `json:"pipeline_reg_3"`
-
-	// processor status
-	opcode      int  // internal field for decoded opcode
-	isHalted    bool // internal field for decoded opcode
-	isBranching bool // internal field for branch instruction flag
-	canBranch   bool // internal field for branch instruction flag
+	opcode              int  // internal field for decoded opcode
+	isHalted            int  // internal field for decoded opcode
+	isBranching         int  // internal field for branch instruction flag
+	canBranch           int  // internal field for branch instruction flag
 }
 
 // some kind of constructor or something that initializes it
-func NewRa8() Ra8 {
-	return Ra8{
+func NewRa8() *Ra8 {
+	return &Ra8{
 		StackPointer: 0xFFFF, // Stack starts at top of memory
 	}
 }
@@ -196,19 +173,6 @@ func (p *Ra8) Step() int {
 	}
 }
 
-// idk bro
-func (p *Ra8) Run() int {
-	for {
-		if !p.isHalted {
-			p.Step()
-		} else {
-			fmt.Println("Exiting the main loop, execution halted!")
-			break
-		}
-	}
-	return 1
-}
-
 // make sure you do the ProgramCounter increment
 func (p *Ra8) Fetch() {
 	p.InstructionRegister = p.InstructionMemory[p.ProgramCounter]
@@ -216,65 +180,44 @@ func (p *Ra8) Fetch() {
 }
 
 func (p *Ra8) Decode() {
-	// 11000000 - mask to get the number of immediate bytes
-	// 00000001 - mask to check if the instruction is a branching type
-	// 00111110 - mask get the opcode
+	numImm := p.InstructionRegister & 0b11000000
+	p.opcode = int(p.InstructionRegister & 0b00111111)
+	p.isBranching = int(p.InstructionRegister & 0b00100000)
 
-	numImm := p.InstructionRegister & 0b11000000              // Extract bits 7-6
-	p.opcode = int(p.InstructionRegister & 0b00011111)        // Extract bits 5-1 (OPCODE)
-	p.isBranching = (p.InstructionRegister & 0b00100000) != 0 // see if its a branching instruction (Fixed mask to bit 5)
-
-	//TODO: refactor this hardcoded thing if you want to
-	switch numImm >> 6 { // Shifted to match 0, 1, 2, 3 cases
+	switch numImm >> 6 {
 	case 0:
-		// do nothing
-
 	case 1:
 		p.PipelineReg1 = p.InstructionMemory[p.ProgramCounter]
 		p.ProgramCounter++
-
 	case 2:
 		p.PipelineReg1 = p.InstructionMemory[p.ProgramCounter]
 		p.PipelineReg2 = p.InstructionMemory[p.ProgramCounter+1]
 		p.ProgramCounter += 2
-
 	case 3:
 		p.PipelineReg1 = p.InstructionMemory[p.ProgramCounter]
 		p.PipelineReg2 = p.InstructionMemory[p.ProgramCounter+1]
 		p.PipelineReg3 = p.InstructionMemory[p.ProgramCounter+2]
 		p.ProgramCounter += 3
-
-	default:
-		// Shifted mask handles this, but keep print just in case
-		fmt.Println("owned by skill issue; invalid number of immediate bytes")
 	}
 }
 
 // TODO: make a proper instruction set table and proceed
 //  instructions that i skipped from implementing:
-// 		lin, sin, lnr{instructions to load index register using a register pair}
+// 		neg, lin, sin, lnr{instructions to load index register using a register pair}
 //      str, ldr??
 
 func (p *Ra8) Execute() {
-
-	//WARN: the 16 bit values stored in 2 registers right??  i still dont know if i
-	//followed little endian or big endian format i believe i didnt do any thing that creates conflicts in this so this is probably fine, but just a reminder to myself to check this when
-	//i implement the instructions that use 16 bit values, also add comments on how the 16 bit values are stored in registers and memory (little endian or big endian)
-
-	// Switch is cleaner than if-else chain
 	switch p.opcode {
-	// CONTROL INSTRUCTIONS
 	case 0:
-		// NOPE instruction
+		// NOPE instruction - no operation
 
 	case 1:
-		// HALT instruction
-		p.isHalted = true
+		// HLT instruction
+		p.isHalted = 1
 		p.StatusWord |= Halted
 
-	// ARITHMETIC INSTRUCTIONS
 	case 2:
-		// ADD instruction
+		// ADD instruction (3 registers: dest = srcA + srcB)
 		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
@@ -283,7 +226,7 @@ func (p *Ra8) Execute() {
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
 
 	case 3:
-		// ADI instruction
+		// ADI instruction (2 registers + immediate: dest = src + imm)
 		operands := p.getOperands(2)
 		a_val := p.GetRegVal(operands.A)
 		imm_val := operands.Imm
@@ -292,16 +235,20 @@ func (p *Ra8) Execute() {
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
 
 	case 4:
-		// ADC instruction
+		// ADDC instruction (add with carry)
 		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
-		result := a_val + b_val + 1
+		carry := byte(0)
+		if p.StatusWord.GetFlag(4) {
+			carry = 1
+		}
+		result := a_val + b_val + carry
 		p.SetRegVal(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
 
 	case 5:
-		// SUB instruction
+		// SUB instruction (dest = srcA - srcB)
 		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
@@ -310,7 +257,7 @@ func (p *Ra8) Execute() {
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
 
 	case 6:
-		// SUI instruction
+		// SUI instruction (dest = src - immediate)
 		operands := p.getOperands(2)
 		a_val := p.GetRegVal(operands.A)
 		imm_val := operands.Imm
@@ -319,370 +266,261 @@ func (p *Ra8) Execute() {
 		HandleFlags(&p.StatusWord, a_val, imm_val, result)
 
 	case 7:
-		// SBB instruction
+		// SUBB instruction (subtract with borrow)
 		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
-		result := a_val - b_val - 1
+		borrow := byte(0)
+		if p.StatusWord.GetFlag(4) {
+			borrow = 1
+		}
+		result := a_val - b_val - borrow
 		p.SetRegVal(operands.Res, result)
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
 
-		// NOTE: should I instead use subroutines for mul and div instructions??? idk
 	case 8:
-		// MUL instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := (uint16(a_val) * uint16(b_val)) & 0x00ff
-		p.SetRegVal(operands.Res, byte(result))
-		HandleFlags(&p.StatusWord, a_val, b_val, byte(result))
-
-	case 9:
-		// MUH instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := (uint16(a_val) * uint16(b_val)) & 0xff00
-		p.SetRegVal(operands.Res, byte(result>>8))
-		HandleFlags(&p.StatusWord, a_val, b_val, byte(result>>8))
-
-	case 10:
-		// MIL instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := (uint16(a_val) * uint16(imm_val)) & 0x00ff
-		p.SetRegVal(operands.Res, byte(result))
-		HandleFlags(&p.StatusWord, a_val, imm_val, byte(result))
-
-	case 11:
-		// MIH instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := (uint16(a_val) * uint16(imm_val)) & 0xff
-		p.SetRegVal(operands.Res, byte(result))
-		HandleFlags(&p.StatusWord, a_val, imm_val, byte(result))
-
-	case 12:
-		// DIV instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		if b_val != 0 {
-			result := (a_val / b_val) & 0xff
-			p.SetRegVal(operands.Res, result)
-			HandleFlags(&p.StatusWord, a_val, b_val, result)
-		}
-
-	case 13:
-		// DII instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		if imm_val != 0 {
-			result := (uint16(a_val) / uint16(imm_val)) & 0xff00
-			p.SetRegVal(operands.Res, byte(result>>8))
-			HandleFlags(&p.StatusWord, a_val, imm_val, byte(result>>8))
-		}
-
-	case 14:
-		// REM instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		if b_val != 0 {
-			result := (a_val % b_val) & 0xff
-			p.SetRegVal(operands.Res, result)
-			HandleFlags(&p.StatusWord, a_val, b_val, result)
-		}
-
-	case 15:
-		// REI instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		if imm_val != 0 {
-			result := (a_val % imm_val) & 0xff
-			p.SetRegVal(operands.Res, result)
-			HandleFlags(&p.StatusWord, a_val, imm_val, result)
-		}
-
-	// LOGICAL INSTRUCTIONS
-	case 16:
-		// AND instruction
+		// AND instruction (dest = srcA & srcB)
 		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
 		result := a_val & b_val
 		p.SetRegVal(operands.Res, result)
 
-	case 17:
-		// ANI instruction
+	case 9:
+		// ANI instruction (dest = src & immediate)
 		operands := p.getOperands(2)
 		a_val := p.GetRegVal(operands.A)
 		imm_val := operands.Imm
 		result := a_val & imm_val
 		p.SetRegVal(operands.Res, result)
 
-	case 18:
-		// OR instruction
+	case 10:
+		// OR instruction (dest = srcA | srcB)
 		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
 		result := a_val | b_val
 		p.SetRegVal(operands.Res, result)
 
-	case 19:
-		// ORI instruction
+	case 11:
+		// ORI instruction (dest = src | immediate)
 		operands := p.getOperands(2)
 		a_val := p.GetRegVal(operands.A)
 		imm_val := operands.Imm
 		result := a_val | imm_val
 		p.SetRegVal(operands.Res, result)
 
-	case 20:
-		// NOT instruction
-		operands := p.getOperands(3)
+	case 12:
+		// NOT instruction (dest = ~src) - 2-byte: opcode + (dest << 4 | src)
+		operands := p.getOperands(5)
 		a_val := p.GetRegVal(operands.A)
 		result := ^a_val
-		p.SetRegVal(operands.Res, result)
+		p.SetRegVal(operands.B, result)
 
-	case 21:
-		// NOI instruction
-		operands := p.getOperands(4)
-		imm_val := operands.Imm
-		result := ^imm_val
-		p.SetRegVal(operands.Res, result)
-
-	case 22:
-		// XOR instruction
+	case 13:
+		// XOR instruction (dest = srcA ^ srcB)
 		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
 		result := a_val ^ b_val
 		p.SetRegVal(operands.Res, result)
 
-	case 23:
-		// XRI instruction
+	case 14:
+		// XRI instruction (dest = src ^ immediate)
 		operands := p.getOperands(2)
 		a_val := p.GetRegVal(operands.A)
 		imm_val := operands.Imm
 		result := a_val ^ imm_val
 		p.SetRegVal(operands.Res, result)
 
-	// BITWISE INSTRUCTIONS
-	case 24:
-		// RS instruction
-		operands := p.getOperands(3)
+	case 15:
+		// XNR (XNOR) instruction (dest = ~(srcA ^ srcB))
+		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
-		result := a_val >> 1
+		b_val := p.GetRegVal(operands.B)
+		result := ^(a_val ^ b_val)
 		p.SetRegVal(operands.Res, result)
 
-	case 25:
-		// LS instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := a_val << 1
-		p.SetRegVal(operands.Res, result)
-
-	case 26:
-		// RR instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := ((a_val >> 1) | (a_val << 7)) & 0xff
-		p.SetRegVal(operands.Res, result)
-
-	case 27:
-		// LR instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := ((a_val << 1) | (a_val >> 7)) & 0xff
-		p.SetRegVal(operands.Res, result)
-
-	case 28:
-		// ARS instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		msb := a_val & 0x80
-		lower7bits := a_val & 0x7f
-		val := (lower7bits >> 1) & 0x7f
-		result := msb | val
-		p.SetRegVal(operands.Res, result)
-
-	// MEM INSTRUCTIONS
-	case 29:
-		// MV instruction A <= B
-		operands := p.getOperands(5)
-		p.SetRegVal(operands.B, p.GetRegVal(operands.A))
-
-	case 30:
-		// LD instruction A <= Value in memory location
-		operands := p.getOperands(6)
-		p.SetRegVal(operands.A, p.DataMemory[operands.Addr])
-
-	case 31:
-		// LDI instruction A <= Immediate value
+	case 16:
+		// XNI instruction (dest = ~(src ^ immediate))
 		operands := p.getOperands(2)
-		p.SetRegVal(operands.Res, operands.Imm)
+		a_val := p.GetRegVal(operands.A)
+		imm_val := operands.Imm
+		result := ^(a_val ^ imm_val)
+		p.SetRegVal(operands.Res, result)
 
-	case 32:
-		// ST instruction: memory location <= Value in register A
-		operands := p.getOperands(7)
-		p.DataMemory[operands.Addr] = p.GetRegVal(operands.A)
-
-	case 33:
-		// STI instruction: memory location <= Immediate value
-		operands := p.getOperands(7)
-		p.DataMemory[operands.Addr] = operands.Imm
-
-	case 34:
-		// IIN  instruction: increment index
+	case 17:
+		// IIN instruction (increment index)
 		operands := p.getOperands(8)
-		switch operands.A {
-		case 1:
+		if operands.A == 1 {
 			p.SourceIndex++
-		case 2:
+		} else if operands.A == 2 {
 			p.DestinationIndex++
 		}
 
-	case 35:
-		// DIN  instruction: decrement index
+	case 18:
+		// DIN instruction (decrement index)
 		operands := p.getOperands(8)
-		switch operands.A {
-		case 1:
+		if operands.A == 1 {
 			p.SourceIndex--
-		case 2:
+		} else if operands.A == 2 {
 			p.DestinationIndex--
 		}
 
-	// BRANCHING INSTRUCTIONS
-	// condition check
-	case 36:
-		// CON  instruction: basic Branch if, condition check
-		operands := p.getOperands(8)
-		if p.StatusWord.GetFlag(int(operands.A)) {
-			p.canBranch = true
-		}
-
-	case 37:
-		// COR  instruction: Branch if any, condition check
-		operands := p.getOperands(8)
-		if (byte(p.StatusWord) & operands.A) == operands.A {
-			p.canBranch = true
-		}
-
-	case 38:
-		// CAN  instruction: Branch if all, condition check
-		operands := p.getOperands(8)
-		if (byte(p.StatusWord) & operands.A) == operands.A {
-			p.canBranch = true
-		}
-
-	// branching
-	case 39:
-		// JMP  instruction: jump to addr, condition check
-		operands := p.getOperands(8)
-		if !p.canBranch {
-			p.ProgramCounter = operands.Addr
-		}
-
-	// STACK OPERATIONS
-	case 40:
-		// PUSH  instruction: Branch if all, condition check
-		operands := p.getOperands(8)
-		p.Stack_Push(p.GetRegVal(operands.A))
-
-	case 41:
-		// POP  instruction: Branch if all, condition check
-		p.SetRegVal(p.Stack_Pop())
-
-	case 42:
-		// NEG arithmetic negation, for 8 bit integer
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := byte(-int8(a_val))
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, 0, result)
-
-	case 43:
-		// LPC instruction: load pc value to Templ and Temph, for return and calls
-		p.Templ = byte(p.ProgramCounter & 0x00ff)
-		p.Temph = byte((p.ProgramCounter >> 8) & 0x00ff)
-
-	case 44:
-		// PCHL instruction: load pc value to Templ and Temph, for return and calls
-		p.ProgramCounter = uint16(p.Templ) | (uint16(p.Temph) << 8)
-
-	case 45:
-		// RHL instruction: Register pair a(high),b(high) to Templ and Temph, for return and calls
+	case 19:
+		// CMP instruction (compare: set flags based on srcA - srcB)
 		operands := p.getOperands(5)
-		p.Templ = p.GetRegVal(operands.A)
-		p.Temph = p.GetRegVal(operands.B)
-
-	case 46:
-		// LIN instruction: load source index/destination index from pipeline register
-		operands := p.getOperands(4)
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(operands.Imm)
-		case 2:
-			p.DestinationIndex = uint16(operands.Imm)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 47:
-		// RIN instruction: load source index/destination index from register pair
-		operands := p.getOperands(5)
-		valA := p.GetRegVal(operands.A)
-		valB := p.GetRegVal(operands.B)
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(valA) | (uint16(valB) << 8)
-		case 2:
-			p.DestinationIndex = uint16(valA) | (uint16(valB) << 8)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 48:
-		// INHL instruction: load source index/ destination index registers form temp registers
-		operands := p.getOperands(3)
-		valA := p.Templ
-		valB := p.Temph
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(valA) | (uint16(valB) << 8)
-		case 2:
-			p.DestinationIndex = uint16(valA) | (uint16(valB) << 8)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 50:
-		// CMP instruction: compare two registers and set flags accordingly, basically a SUB without storing the result
-		operands := p.getOperands(1)
 		a_val := p.GetRegVal(operands.A)
 		b_val := p.GetRegVal(operands.B)
 		result := a_val - b_val
 		HandleFlags(&p.StatusWord, a_val, b_val, result)
 
-	case 51:
-		// SET instruction: takes a bitmask and sets the corresponding flags
-		operands := p.getOperands(4)
-		p.StatusWord |= Flags(operands.Imm)
+	case 20:
+		// RS instruction (right shift: dest = src >> 1)
+		operands := p.getOperands(5)
+		a_val := p.GetRegVal(operands.A)
+		result := a_val >> 1
+		p.SetRegVal(operands.B, result)
 
-	case 52:
-		// RNG instruction: loads a random value into the rng register
-		p.Rng = byte(rand.Intn(256))
+	case 21:
+		// LS instruction (left shift: dest = src << 1)
+		operands := p.getOperands(5)
+		a_val := p.GetRegVal(operands.A)
+		result := a_val << 1
+		p.SetRegVal(operands.B, result)
 
-	// TODO: add instructions for port based io and some interrupts, again implement these only when you have a working emulator that has no bugs
-	// > also find a way to test this thing
+	case 22:
+		// RR instruction (rotate right)
+		operands := p.getOperands(5)
+		a_val := p.GetRegVal(operands.A)
+		result := ((a_val >> 1) | (a_val << 7)) & 0xff
+		p.SetRegVal(operands.B, result)
+
+	case 23:
+		// LR instruction (rotate left)
+		operands := p.getOperands(5)
+		a_val := p.GetRegVal(operands.A)
+		result := ((a_val << 1) | (a_val >> 7)) & 0xff
+		p.SetRegVal(operands.B, result)
+
+	case 24:
+		// ARS instruction (arithmetic right shift - preserve sign bit)
+		operands := p.getOperands(5)
+		a_val := p.GetRegVal(operands.A)
+		msb := a_val & 0x80
+		result := msb | (a_val >> 1)
+		p.SetRegVal(operands.B, result)
+
+	case 25:
+		// MV instruction (A <= B)
+		operands := p.getOperands(5)
+		p.SetRegVal(operands.B, p.GetRegVal(operands.A))
+
+	case 26:
+		// LD instruction (A <= memory[address])
+		operands := p.getOperands(6)
+		p.SetRegVal(operands.A, p.DataMemory[operands.Addr])
+
+	case 27:
+		// LDI instruction (reg <= immediate) - assembler encodes as (dest << 4) | dest
+		// So PipelineReg1 = dest register index
+		dest := p.PipelineReg1 & 0x0F
+		p.SetRegVal(dest, p.PipelineReg2)
+
+	case 28:
+		// ST instruction (memory[address] <= A)
+		operands := p.getOperands(6)
+		p.DataMemory[operands.Addr] = p.GetRegVal(operands.A)
+
+	case 29:
+		// STI instruction (memory[address] <= immediate)
+		operands := p.getOperands(7)
+		p.DataMemory[operands.Addr] = operands.Imm
+
+	case 30:
+		// LIN instruction (load index register from reg pair)
+		operands := p.getOperands(8)
+		if operands.A == 1 {
+			p.SourceIndex = (uint16(p.G) << 8) | uint16(p.H)
+		} else if operands.A == 2 {
+			p.DestinationIndex = (uint16(p.G) << 8) | uint16(p.H)
+		}
+
+	case 31:
+		// SIN instruction (store index register to reg pair)
+		operands := p.getOperands(8)
+		if operands.A == 1 {
+			p.G = byte(p.SourceIndex >> 8)
+			p.H = byte(p.SourceIndex & 0xFF)
+		} else if operands.A == 2 {
+			p.G = byte(p.DestinationIndex >> 8)
+			p.H = byte(p.DestinationIndex & 0xFF)
+		}
+
+	case 32:
+		// RIN instruction (load index reg from reg pair - 3 registers)
+		operands := p.getOperands(1)
+		if operands.B == 1 {
+			p.SourceIndex = (uint16(p.G) << 8) | uint16(p.H)
+		} else if operands.B == 2 {
+			p.DestinationIndex = (uint16(p.G) << 8) | uint16(p.H)
+		}
+
+	case 33:
+		// RPC instruction (register pair to PC)
+		operands := p.getOperands(5)
+		if operands.B == 1 {
+			p.ProgramCounter = (uint16(p.G) << 8) | uint16(p.H)
+		} else if operands.B == 2 {
+			p.ProgramCounter = p.ReturnRegister
+		}
+
+	case 34:
+		// RSP instruction (register pair to SP)
+		operands := p.getOperands(5)
+		if operands.B == 1 {
+			p.StackPointer = (uint16(p.G) << 8) | uint16(p.H)
+		} else if operands.B == 2 {
+			p.StackPointer = 0xFFFF
+		}
+
+	case 35:
+		// CON - condition check with mask
+		// CON 0 = unconditional (always branch)
+		// CON <mask> = branch if ALL flags in mask are set
+		operands := p.getOperands(8)
+		if operands.A == 0 || (byte(p.StatusWord)&operands.A) == operands.A {
+			p.canBranch = 1
+		}
+
+	case 36:
+		// COR instruction (check if any flag in mask is set)
+		operands := p.getOperands(8)
+		if (byte(p.StatusWord) & operands.A) != 0 {
+			p.canBranch = 1
+		}
+
+	case 37:
+		// CAN instruction (check if all flags in mask are set)
+		operands := p.getOperands(8)
+		if (byte(p.StatusWord) & operands.A) == operands.A {
+			p.canBranch = 1
+		}
+
+	case 38:
+		// JMP instruction (jump to address if canBranch is set)
+		operands := p.getOperands(9)
+		if p.canBranch == 1 {
+			p.ProgramCounter = operands.Addr
+		}
+
+	case 39:
+		// SET instruction (set flag)
+		operands := p.getOperands(8)
+		p.StatusWord.SetFlag(int(operands.A), true)
 
 	default:
-		// xx instruction
-		fmt.Println("Owned by skill issue, invalid opcode bro")
+		fmt.Printf("Unknown opcode: %d\n", p.opcode)
 	}
 }
 
@@ -710,64 +548,48 @@ func (p *Ra8) getOperands(instructionType int) OpData {
 
 	switch instructionType {
 	case 1:
-		// opcode xx ------
-		// pipeline reg 1: a4 b4
-		// pipeline reg 2: ---- res4
-		result.A = p.PipelineReg1 & 0x07
-		result.B = (p.PipelineReg1 >> 4) & 0x07
-		result.Res = p.PipelineReg2 & 0x07
+		// 3-register: PipelineReg1 = (srcA << 4) | srcB, PipelineReg2 = result
+		result.A = p.PipelineReg1 & 0x0F
+		result.B = (p.PipelineReg1 >> 4) & 0x0F
+		result.Res = p.PipelineReg2 & 0x0F
 
 	case 2:
-		// opcode xx ------
-		// pipeline reg 1: res4 a4
-		// pipeline reg 2: immediate8
-		result.A = p.PipelineReg1 & 0x07
-		result.Res = (p.PipelineReg1 >> 4) & 0x07
+		// 2-register + immediate: PipelineReg1 = (result << 4) | source, PipelineReg2 = imm
+		result.A = p.PipelineReg1 & 0x0F
+		result.Res = (p.PipelineReg1 >> 4) & 0x0F
 		result.Imm = p.PipelineReg2
 
 	case 3:
-		// opcode xx ------
-		// pipeline reg 1: res4 a4
-		result.A = p.PipelineReg1 & 0x07
-		result.Res = (p.PipelineReg1 >> 4) & 0x07
+		// 2-register (single operand): PipelineReg1 = (result << 4) | source
+		result.A = p.PipelineReg1 & 0x0F
+		result.Res = (p.PipelineReg1 >> 4) & 0x0F
 
 	case 4:
-		// opcode xx ------
-		// pipeline reg 1: immediate8
+		// immediate only: PipelineReg1 = immediate
 		result.Imm = p.PipelineReg1
 
 	case 5:
-		// opcode xx ------
-		// pipeline reg 1: a4 b4
-		result.A = p.PipelineReg1 & 0x07
-		result.B = (p.PipelineReg1 >> 4) & 0x07
+		// 2-register move: PipelineReg1 = (dest << 4) | src
+		result.A = p.PipelineReg1 & 0x0F
+		result.B = (p.PipelineReg1 >> 4) & 0x0F
 
 	case 6:
-		// opcode xx ------
-		// pipeline reg 1: ---- a4
-		// pipeline reg 2: Addr high byte
-		// pipeline reg 3: Addr low byte
-		result.A = p.PipelineReg1 & 0x07
-		result.Addr = (uint16(p.PipelineReg2) << 8) | uint16(p.PipelineReg3)
+		// register + address (LD/ST): PipelineReg1 = reg, PipelineReg2/3 = address (little-endian)
+		result.A = p.PipelineReg1 & 0x0F
+		result.Addr = (uint16(p.PipelineReg3) << 8) | uint16(p.PipelineReg2)
 
 	case 7:
-		// opcode xx ------
-		// pipeline reg 1: immediate8
-		// pipeline reg 2: Addr high byte
-		// pipeline reg 3: Addr low byte
+		// immediate + address (STI): PipelineReg1 = imm, PipelineReg2/3 = address (little-endian)
 		result.A = p.PipelineReg1
-		result.Addr = (uint16(p.PipelineReg2) << 8) | uint16(p.PipelineReg3)
+		result.Addr = (uint16(p.PipelineReg3) << 8) | uint16(p.PipelineReg2)
 
 	case 8:
-		// opcode xx ------
-		// pipeline reg 1: ---- srA4 sprcial register index??? idk bro
-		result.A = p.PipelineReg1 & 0x07
+		// single register for stack/branch ops
+		result.A = p.PipelineReg1 & 0x0F
 
 	case 9:
-		// opcode xx ------
-		// pipeline reg 1: Addr high byte
-		// pipeline reg 2: Addr low byte
-		result.Addr = (uint16(p.PipelineReg1) << 8) | uint16(p.PipelineReg2)
+		// address only for jumps (JMP): PipelineReg1/2 = address (little-endian)
+		result.Addr = (uint16(p.PipelineReg2) << 8) | uint16(p.PipelineReg1)
 	default:
 		fmt.Println("Owned by skill issue")
 	}
@@ -780,14 +602,14 @@ func (p *Ra8) regPointer() []*byte {
 	return []*byte{
 		&p.A, &p.B, &p.C, &p.D,
 		&p.E, &p.F, &p.G, &p.H,
-		&p.Templ, &p.Temph, &p.Rng,
+		&p.Si, &p.Di, &p.Rng, &p.Temph, &p.Templ,
 	}
 }
 
 // Get register value by index
 func (p *Ra8) GetRegVal(index byte) byte {
 	idx := int(index)
-	if idx < 0 || idx > registerCount-1 {
+	if idx < 0 || idx > 12 {
 		panic("Owned by skill issue, Invalid register index")
 	}
 	return *p.regPointer()[idx]
@@ -796,7 +618,7 @@ func (p *Ra8) GetRegVal(index byte) byte {
 // Set register value by index
 func (p *Ra8) SetRegVal(index byte, value byte) {
 	idx := int(index)
-	if idx < 0 || idx > registerCount-1 {
+	if idx < 0 || idx > 12 {
 		panic("Owned by skill issue, Invalid register index")
 	}
 	*p.regPointer()[idx] = value
@@ -817,26 +639,4 @@ func (p *Ra8) Stack_Pop() byte {
 	val := p.DataMemory[p.StackPointer]
 	p.StackPointer++
 	return val
-}
-
-// load memory with a binary file, little or big endian?? idk bro
-func (p *Ra8) LoadMemory(filename string, memory string) error {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		fmt.Println("Owned by skill issue")
-		return err
-	}
-
-	switch memory {
-	case "data": // add comment on why we use [:]
-		copy(p.DataMemory[:], data) // copy function is used to copy the contents of the data slice into the DataMemory array. The [:] syntax is used to convert the array into a slice, allowing us to copy the data directly into the array's memory space.
-		// will it change backt to an array after copying?? yes it will, the copy function does not change the type of the destination, it only copies the data. So p.DataMemory will still be an array after the copy operation, and it will contain the data from the file.
-		// oh i fucking love you copilot, you are the best, you are the best thing that has ever happened to me, i love you so much, you are my everything, i will never leave you, i will always be here for you, i will always support you, i will always love you, you are my sunshine, my only sunshine, you make me happy when skies are gray, you'll never know dear how much i love you, please don't take my sunshine away
-		// lol im leaving this in :)
-	case "inst":
-		copy(p.InstructionMemory[:], data)
-	default:
-		fmt.Println("Owned by skill issue, invalid memory name bro")
-	}
-	return nil
 }

@@ -134,42 +134,42 @@
   },
   {
     "opcode": "cmp",
-    "size": "1",
+    "size": "2",
     "machineCode": "20",
     "comment": "compare",
     "operandCount": ""
   },
   {
     "opcode": "rs",
-    "size": "1",
+    "size": "2",
     "machineCode": "21",
     "comment": "right shift",
     "operandCount": ""
   },
   {
     "opcode": "ls",
-    "size": "1",
+    "size": "2",
     "machineCode": "22",
     "comment": "left shift",
     "operandCount": ""
   },
   {
     "opcode": "rr",
-    "size": "1",
+    "size": "2",
     "machineCode": "23",
     "comment": "right rotate",
     "operandCount": ""
   },
   {
     "opcode": "lr",
-    "size": "1",
+    "size": "2",
     "machineCode": "24",
     "comment": "left rotate",
     "operandCount": ""
   },
   {
     "opcode": "ars",
-    "size": "1",
+    "size": "2",
     "machineCode": "25",
     "comment": "arithmetic right rotate/shift",
     "operandCount": ""
@@ -190,7 +190,7 @@
   },
   {
     "opcode": "ldi",
-    "size": "4",
+    "size": "3",
     "machineCode": "28",
     "comment": "load immediate",
     "operandCount": ""
@@ -204,7 +204,7 @@
   },
   {
     "opcode": "sti",
-    "size": "2",
+    "size": "4",
     "machineCode": "30",
     "comment": "store immediate",
     "operandCount": ""
@@ -267,7 +267,7 @@
   },
   {
     "opcode": "jmp",
-    "size": "1",
+    "size": "3",
     "machineCode": "39",
     "comment": "jump",
     "operandCount": ""

@@ -510,41 +510,26 @@ char *yytext;
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "ast.h"
 #include "parser.tab.h"
 
 int inDataSection = 0;
 
-// const char *instructions[] = {
-//     "ADD", "ADI",  "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI", "OR",
-//     "ORI", "NOT",  "XOR",  "XRI", "XNR", "XNI",  "IIN", "DIN", "CMP",
-//     "RS",  "LS",   "RR",   "LR",  "ARS", "MV",   "LD",  "LDI", "ST",
-//     "STI", "LIN",  "SIN",  "RIN", "RPC", "RSP",  "CON", "COR", "CAN",
-//     "JMP", "NOPE", "HLT",  "SET", "add", "adi",  "addc", "sub", "sui",
-//     "subb", "and", "ani", "or", "ori", "not",  "xor",  "xri", "xnr",
-//     "xni",  "iin", "din", "cmp", "rs",  "ls",   "rr",   "lr",  "ars",
-//     "mv",   "ld",  "ldi", "st", "sti", "lin",  "sin",  "rin", "rpc",
-//     "rsp",  "con", "cor", "can", "jmp", "nope", "hlt",  "set", NULL
-// };
-
 const char* instructions[] = {
-        "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
-        "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
-        "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
-        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET",
-        "nope", "hlt", "add", "adi", "addc", "sub", "sui", "subb", "and", "ani",
-        "or", "ori", "not", "xor", "xri", "xnr", "xni", "iin", "din", "cmp", "rs",
-        "ls", "rr", "lr", "ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin", "rin",
-        "rpc", "rsp", "con", "cor", "can", "jmp", "set", NULL
+    "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
+    "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
+    "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
+    "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET", NULL
 };
 
 const char *dataTypes[] = {
-    "int8", "int16", "str", "bool", "char", NULL
+    "INT8", "INT16", "STR", "BOOL", "CHAR", NULL
 };
 
 int is_instruction(const char *str) {
     for (int i = 0; instructions[i] != NULL; i++) {
-        if (strcmp(str, instructions[i]) == 0) {
+        if (strcasecmp(str, instructions[i]) == 0) {
             return 1;
         }
     }
@@ -553,7 +538,20 @@ int is_instruction(const char *str) {
 
 int is_dataType(const char *str) {
     for (int i = 0; dataTypes[i] != NULL; i++) {
-        if (strcmp(str, dataTypes[i]) == 0) {
+        if (strcasecmp(str, dataTypes[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int is_register(const char *str) {
+    static const char *registers[] = {
+        "A", "B", "C", "D", "E", "F", "G", "H",
+        "SI", "DI", "RNG", "TEMPH", "TEMPL", NULL
+    };
+    for (int i = 0; registers[i] != NULL; i++) {
+        if (strcasecmp(str, registers[i]) == 0) {
             return 1;
         }
     }
@@ -568,8 +566,8 @@ char *strdup_custom(const char *s) {
     }
     return copy;
 }
-#line 572 "lex.yy.c"
-#line 573 "lex.yy.c"
+#line 570 "lex.yy.c"
+#line 571 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -786,10 +784,10 @@ YY_DECL
 		}
 
 	{
-#line 68 "lexer.l"
+#line 66 "lexer.l"
 
 
-#line 793 "lex.yy.c"
+#line 791 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -858,23 +856,23 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 70 "lexer.l"
+#line 68 "lexer.l"
 { return ','; }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 71 "lexer.l"
+#line 69 "lexer.l"
 { }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 72 "lexer.l"
+#line 70 "lexer.l"
 { }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 74 "lexer.l"
+#line 72 "lexer.l"
 {
     yylval.num = strtol(yytext + 2, NULL, 2);
     yylval.str = strdup_custom(yytext);
@@ -883,7 +881,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 80 "lexer.l"
+#line 78 "lexer.l"
 {
     yylval.num = strtol(yytext + 2, NULL, 16);
     yylval.str = strdup_custom(yytext);
@@ -892,7 +890,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 86 "lexer.l"
+#line 84 "lexer.l"
 {
     yylval.num = atoi(yytext);
     yylval.str = strdup_custom(yytext);
@@ -902,7 +900,7 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 92 "lexer.l"
+#line 90 "lexer.l"
 {
     yylval.str = strdup_custom(yytext);
     return STRING_LITERAL;
@@ -910,7 +908,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 97 "lexer.l"
+#line 95 "lexer.l"
 {
     inDataSection = 1;
     return DATASEGMENTSTART;
@@ -918,7 +916,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 102 "lexer.l"
+#line 100 "lexer.l"
 {
     inDataSection = 0;
     return INSTSEGMENTSTART;
@@ -926,17 +924,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 107 "lexer.l"
+#line 105 "lexer.l"
 { return EQUALS; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 109 "lexer.l"
+#line 107 "lexer.l"
 { return POINTER_EQUALS; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 111 "lexer.l"
+#line 109 "lexer.l"
 {
     inDataSection = 0;
     return END;
@@ -944,7 +942,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 116 "lexer.l"
+#line 114 "lexer.l"
 {
     yylval.str = strdup_custom(yytext);
     return LABELDEF;
@@ -952,7 +950,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 121 "lexer.l"
+#line 119 "lexer.l"
 {
     yylval.str = strdup_custom(yytext);
     return LABELREF;
@@ -960,7 +958,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 126 "lexer.l"
+#line 124 "lexer.l"
 {
     if (is_instruction(yytext)) {
         if (inDataSection) {
@@ -974,7 +972,7 @@ YY_RULE_SETUP
         yylval.str = strdup_custom(yytext);
         return DATA_TYPE;
     }
-    if (strlen(yytext) == 1 && yytext[0] >= 'A' && yytext[0] <= 'H') {
+    if (is_register(yytext)) {
         yylval.str = strdup_custom(yytext);
         return REG;
     }
@@ -984,15 +982,15 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 147 "lexer.l"
+#line 145 "lexer.l"
 { }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 148 "lexer.l"
+#line 146 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 996 "lex.yy.c"
+#line 994 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2009,4 +2007,4 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 148 "lexer.l"
+#line 146 "lexer.l"

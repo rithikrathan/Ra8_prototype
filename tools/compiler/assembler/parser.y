@@ -28,10 +28,6 @@ dataType parse_data_type(const char *s) {
 
 int isValid(const char *str) {
     const char* ignoreList[] = {
-        "nope", "hlt", "add", "adi", "addc", "sub", "sui", "subb", "and", "ani",
-        "or", "ori", "not", "xor", "xri", "xnr", "xni", "iin", "din", "cmp", "rs",
-        "ls", "rr", "lr", "ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin", "rin",
-        "rpc", "rsp", "con", "cor", "can", "jmp", "set",
         "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
         "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
         "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
@@ -39,7 +35,7 @@ int isValid(const char *str) {
     };
 
     for (int i = 0; ignoreList[i] != NULL; i++) {
-        if (strcmp(str, ignoreList[i]) == 0) {
+        if (strcasecmp(str, ignoreList[i]) == 0) {
             return 0;
         };
     }
@@ -183,9 +179,9 @@ data_declaration:
     ;
 
 data_value:
-    NUM { $$ = createNode(literal, strdup(yytext), $1); }
-    | BIN { $$ = createNode(literal, strdup(yytext), $1); }
-    | HEX { $$ = createNode(literal, strdup(yytext), $1); }
+    NUM { $$ = createNode(literal, strdup(yytext), atoi(yytext)); }
+    | BIN { $$ = createNode(literal, strdup(yytext), (int)strtol(yytext + 2, NULL, 2)); }
+    | HEX { $$ = createNode(literal, strdup(yytext), (int)strtol(yytext + 2, NULL, 16)); }
     | STRING_LITERAL { $$ = createNode(literal, $1, 0); }
     | IDENTIFIER { $$ = createNode(literal, $1, 0); }
     ;
@@ -252,9 +248,9 @@ operand:
     | LABELREF {
         $$ = createNode(labelRef, cleanup(1, $1, strlen($1)));
      }
-    | NUM { $$ = createNode(literal, strdup(yytext), $1); }
-    | BIN { $$ = createNode(literal, strdup(yytext), $1); }
-    | HEX { $$ = createNode(literal, strdup(yytext), $1); }
+    | NUM { $$ = createNode(literal, strdup(yytext), atoi(yytext)); }
+    | BIN { $$ = createNode(literal, strdup(yytext), (int)strtol(yytext + 2, NULL, 2)); }
+    | HEX { $$ = createNode(literal, strdup(yytext), (int)strtol(yytext + 2, NULL, 16)); }
     | STRING_LITERAL { $$ = createNode(literal, $1, 0); }
     ;
 
