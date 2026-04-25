@@ -51,53 +51,18 @@ astNode *getNextNode() {
     if (curr == NULL)
       continue;
 
+    if (curr->nextSibling != NULL) {
+      push(curr->nextSibling);
+    }
+
     for (int i = curr->childCount - 1; i >= 0; i--) {
       if (curr->children[i] != NULL) {
         push(curr->children[i]);
       }
     }
 
-    fprintf(stderr, "node: %s", node_type_str(curr->type));
-    switch (curr->type) {
-    case section:
-      fprintf(stderr, " (name: %s)\n",
-              curr->as.section.name ? curr->as.section.name : "(nil)");
-      break;
-    case instruction:
-      fprintf(stderr, " (opcode: %s)\n",
-              curr->as.instruction.opcode ? curr->as.instruction.opcode : "(nil)");
-      break;
-    case labelDef:
-      fprintf(stderr, " (name: %s)\n",
-              curr->as.label.name ? curr->as.label.name : "(nil)");
-      break;
-    case labelRef:
-      fprintf(stderr, " (name: %s)\n",
-              curr->as.label.name ? curr->as.label.name : "(nil)");
-      break;
-    case reg:
-      fprintf(stderr, " (name: %s)\n",
-              curr->as.reg.name ? curr->as.reg.name : "(nil)");
-      break;
-    case literal:
-      fprintf(stderr, " (value: %s)\n",
-              curr->as.literal.value ? curr->as.literal.value : "(nil)");
-      break;
-    case identifier:
-      fprintf(stderr, " (name: %s)\n",
-              curr->as.identifier.name ? curr->as.identifier.name : "(nil)");
-      break;
-    case dataDeclaration:
-      fprintf(stderr, " (type: %s)\n",
-              data_type_str(curr->as.dataDeclaration.type));
-      break;
-    default:
-      fprintf(stderr, "\n");
-    }
-
     return curr;
   }
-  fprintf(stderr, "node: NULL (end of traversal)\n");
   return NULL;
 }
 

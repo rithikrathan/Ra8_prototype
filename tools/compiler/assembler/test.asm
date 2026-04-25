@@ -9,7 +9,7 @@
 	char helo  = 3
 	str ello   = "hahah"
 	str ptr   *= 0xffff
-	str LDI    = thishouldreturnanerror
+	; str LDI    = thishouldreturnanerror
 end
 
 

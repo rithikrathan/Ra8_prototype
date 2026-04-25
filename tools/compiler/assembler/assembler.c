@@ -10,6 +10,8 @@ extern astNode *ast_root;
 extern astNode *getNextNode();
 astNode *initTraversal(astNode *root);
 extern char *yytext;
+extern const char *node_type_str(nodeType type);
+extern const char *data_type_str(dataType type);
 
 astNode *traversalCurr;
 astNode *traversalNext;
@@ -111,6 +113,43 @@ int main(int argc, char **argv) {
   if (result == 0) {
     print_ast_json(ast_root, stdout);
     initTraversal(ast_root);
+    astNode *node;
+    while ((node = getNextNode()) != NULL) {
+      fprintf(stderr, "node: %s", node_type_str(node->type));
+      switch (node->type) {
+      case section:
+        fprintf(stderr, " (name: %s)\n",
+                node->as.section.name ? node->as.section.name : "(nil)");
+        break;
+      case instruction:
+        fprintf(stderr, " (opcode: %s)\n",
+                node->as.instruction.opcode ? node->as.instruction.opcode : "(nil)");
+        break;
+      case labelDef:
+      case labelRef:
+        fprintf(stderr, " (name: %s)\n",
+                node->as.label.name ? node->as.label.name : "(nil)");
+        break;
+      case reg:
+        fprintf(stderr, " (name: %s)\n",
+                node->as.reg.name ? node->as.reg.name : "(nil)");
+        break;
+      case literal:
+        fprintf(stderr, " (value: %s)\n",
+                node->as.literal.value ? node->as.literal.value : "(nil)");
+        break;
+      case identifier:
+        fprintf(stderr, " (name: %s)\n",
+                node->as.identifier.name ? node->as.identifier.name : "(nil)");
+        break;
+      case dataDeclaration:
+        fprintf(stderr, " (type: %s)\n",
+                data_type_str(node->as.dataDeclaration.type));
+        break;
+      default:
+        fprintf(stderr, "\n");
+      }
+    }
     secondPass();
     firstPass();
     printSymbolTable();
