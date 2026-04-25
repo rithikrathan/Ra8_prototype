@@ -4,6 +4,105 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern FILE *yyin;
+extern astNode *ast_root;
+extern char *yytext;
+
+/* ==========================================================================
+   AI GENERATED - DFS TRAVERSAL
+   ========================================================================== */
+
+static astNode *stack[256];
+static int sp = -1;
+static astNode *curr = NULL;
+static size_t child_idx = 0;
+
+astNode *getNextNode();
+const char *node_type_str(nodeType type);
+const char *data_type_str(dataType type);
+
+void push(astNode *node) {
+  if (sp >= 255)
+    return;
+  stack[++sp] = node;
+}
+
+astNode *pop() {
+  if (sp < 0)
+    return NULL;
+  return stack[sp--];
+}
+
+int isStackEmpty() { return sp < 0; }
+
+astNode *initTraversal(astNode *root) {
+  sp = -1;
+  child_idx = 0;
+  if (root != NULL) {
+    push(root);
+  }
+  return getNextNode();
+}
+
+astNode *getNextNode() {
+  while (!isStackEmpty()) {
+    curr = pop();
+
+    if (curr == NULL)
+      continue;
+
+    for (int i = curr->childCount - 1; i >= 0; i--) {
+      if (curr->children[i] != NULL) {
+        push(curr->children[i]);
+      }
+    }
+
+    fprintf(stderr, "node: %s", node_type_str(curr->type));
+    switch (curr->type) {
+    case section:
+      fprintf(stderr, " (name: %s)\n",
+              curr->as.section.name ? curr->as.section.name : "(nil)");
+      break;
+    case instruction:
+      fprintf(stderr, " (opcode: %s)\n",
+              curr->as.instruction.opcode ? curr->as.instruction.opcode : "(nil)");
+      break;
+    case labelDef:
+      fprintf(stderr, " (name: %s)\n",
+              curr->as.label.name ? curr->as.label.name : "(nil)");
+      break;
+    case labelRef:
+      fprintf(stderr, " (name: %s)\n",
+              curr->as.label.name ? curr->as.label.name : "(nil)");
+      break;
+    case reg:
+      fprintf(stderr, " (name: %s)\n",
+              curr->as.reg.name ? curr->as.reg.name : "(nil)");
+      break;
+    case literal:
+      fprintf(stderr, " (value: %s)\n",
+              curr->as.literal.value ? curr->as.literal.value : "(nil)");
+      break;
+    case identifier:
+      fprintf(stderr, " (name: %s)\n",
+              curr->as.identifier.name ? curr->as.identifier.name : "(nil)");
+      break;
+    case dataDeclaration:
+      fprintf(stderr, " (type: %s)\n",
+              data_type_str(curr->as.dataDeclaration.type));
+      break;
+    default:
+      fprintf(stderr, "\n");
+    }
+
+    return curr;
+  }
+  fprintf(stderr, "node: NULL (end of traversal)\n");
+  return NULL;
+}
+
+/* ========================================================================== */
+
 astNode *createNode(nodeType type, ...) {
   astNode *node = (astNode *)malloc(sizeof(astNode));
   if (node == NULL) {
@@ -182,11 +281,6 @@ void print_node_json(astNode *node, FILE *out, int *node_id, int parent_id) {
 
   for (size_t i = 0; i < node->childCount; i++) {
     print_node_json(node->children[i], out, node_id, this_id);
-  }
-
-  if (node->type != root && node->type != section &&
-      node->nextSibling != NULL) {
-    print_node_json(node->nextSibling, out, node_id, parent_id);
   }
 }
 

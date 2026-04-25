@@ -8,10 +8,11 @@ extern int yyparse();
 extern FILE *yyin;
 extern astNode *ast_root;
 extern astNode *getNextNode();
+astNode *initTraversal(astNode *root);
 extern char *yytext;
 
-astNode *curr;
-astNode *next;
+astNode *traversalCurr;
+astNode *traversalNext;
 int address = 0;
 
 struct hashMap {
@@ -44,8 +45,8 @@ void printSymbolTable() {
   struct hashMap *current, *temp;
   unsigned int symbolCount = HASH_COUNT(symbolTable);
   printf("\n---[SYMBOL TABLE]---\n");
-  printf("symbolTable is empty\n");
   if (symbolCount == 0) {
+    printf("symbolTable is empty\n");
     return;
   }
   HASH_ITER(hh, symbolTable, current, temp) {
@@ -75,18 +76,14 @@ void free_table() {
   }
 }
 
-// void getNextNode() {
-//   // traverses the ast and return next node
-// }
-
 void firstPass() {
-  // go throught the ast and set the symbolTable
-  // and expand macros in the future
   while (1) {
-    curr = getNextNode();
-    // address calculation
-    if (curr->type == labelDef) {
-      put(yytext, address);
+    traversalCurr = getNextNode();
+    if (traversalCurr == NULL) {
+      break;
+    }
+    if (traversalCurr->type == labelDef) {
+      put(traversalCurr->as.label.name, address);
     }
   }
 }
@@ -113,8 +110,10 @@ int main(int argc, char **argv) {
 
   if (result == 0) {
     print_ast_json(ast_root, stdout);
+    initTraversal(ast_root);
+    secondPass();
+    firstPass();
     printSymbolTable();
-    // this is working and the ast is constructed
   }
   return result;
 }
