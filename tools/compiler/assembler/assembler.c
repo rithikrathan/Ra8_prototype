@@ -1,8 +1,13 @@
 #include "ast.h"
 #include "uthash.h"
 #include <bits/pthreadtypes.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdint.h> // For portable integer types (uint32_t, uint64_t, etc.) |
+#include <stdio.h>  // fopen(), fprintf(), fclose() – the core file‑IO API |
+#include <stdlib.h> // exit(), strtol() – optional helpers (if you want error‑checked number parsing) |
+
+// #include <limits.h> // (optional) for limits such as INT_MAX if you do
+// rangechecks #include <stdbool.h> // (optional) if you want a bool flag
+// insteadof int
 
 extern int yyparse();
 extern FILE *yyin;
@@ -15,7 +20,8 @@ extern const char *data_type_str(dataType type);
 
 astNode *traversalCurr;
 astNode *traversalNext;
-int address = 0;
+int symbolAddress = 0;
+int dataAddress = 0;
 
 struct hashMap {
   char *key;
@@ -24,20 +30,20 @@ struct hashMap {
 };
 
 struct hashMap *symbolTable = NULL;
+struct hashMap *dataTable = NULL;
 
-void put(const char *key_str, int val) {
+#define MAX_DATA_ENTRIES 256
+int dataValues[MAX_DATA_ENTRIES];
+int dataValuesCount = 0;
+
+void put(struct hashMap **table, const char *key_str, int val) {
   struct hashMap *item;
-
-  HASH_FIND_STR(symbolTable, key_str, item);
-
+  HASH_FIND_STR(*table, key_str, item);
   if (item == NULL) {
     item = malloc(sizeof(struct hashMap));
-
     item->key = strdup(key_str);
     item->value = val;
-
-    HASH_ADD_KEYPTR(hh, symbolTable, item->key, strlen(item->key), item);
-
+    HASH_ADD_KEYPTR(hh, *table, item->key, strlen(item->key), item);
   } else {
     item->value = val;
   }
@@ -57,10 +63,24 @@ void printSymbolTable() {
   printf("--------------------\n");
 }
 
-void get(const char *key_str) {
+void printDataTable() {
+  struct hashMap *current, *temp;
+  unsigned int dataCount = HASH_COUNT(dataTable);
+  printf("\n---[DATA TABLE]---\n");
+  if (dataCount == 0) {
+    printf("dataTable is empty\n");
+    return;
+  }
+  HASH_ITER(hh, dataTable, current, temp) {
+    printf("Data: %s \t Addr: %d\n", current->key, current->value);
+  }
+  printf("------------------\n");
+}
+
+void get(struct hashMap *table, const char *key_str) {
   struct hashMap *item;
 
-  HASH_FIND_STR(symbolTable, key_str, item);
+  HASH_FIND_STR(table, key_str, item);
 
   if (item != NULL) {
     printf("Found [%s] : %d\n", item->key, item->value);
@@ -79,19 +99,65 @@ void free_table() {
 }
 
 void firstPass() {
+  initTraversal(ast_root);
+  dataValuesCount = 0;
   while (1) {
     traversalCurr = getNextNode();
     if (traversalCurr == NULL) {
       break;
     }
+    // address calculations
     if (traversalCurr->type == labelDef) {
-      put(traversalCurr->as.label.name, address);
+      put(&symbolTable, traversalCurr->as.label.name, symbolAddress);
+      symbolAddress++;
+    } else if (traversalCurr->type == dataDeclaration) {
+      if (traversalCurr->as.dataDeclaration.type == str) {
+        continue;
+      }
+      char *name = traversalCurr->children[0]->as.identifier.name;
+      int value = traversalCurr->children[1]->as.literal.intValue;
+      fprintf(stderr, "DEBUG: data '%s' value=%d addr=%d\n", name, value, dataAddress);
+      put(&dataTable, name, dataAddress);
+      dataValues[dataValuesCount++] = value;
+      dataAddress++;
     }
   }
 }
 
+int write_value(FILE *fp, int val) {
+  if (fp == NULL)
+    return -1;                      /* sanity check */
+  if (fprintf(fp, "%X\n", val) < 0) /* < 0 means write error */
+    return -1;
+  return 0; /* success */
+}
+
 void secondPass() {
-  // code generation
+  initTraversal(ast_root);
+  FILE *dataFile = fopen("out/dataSegment.txt", "w");
+  FILE *instFile = fopen("out/instSegment.txt", "w");
+
+  if (dataFile == NULL | instFile == NULL) {
+    perror("fopen");
+    return;
+  }
+
+  for (int i = 0; i < dataValuesCount; i++) {
+    write_value(dataFile, dataValues[i]);
+  }
+
+  if (fclose(dataFile) != 0) {
+    perror("fclose");
+    exit(EXIT_FAILURE);
+  }
+  printf("File '%s' dataFile written successfully.\n", "dataSegment.txt");
+
+  if (fclose(instFile) != 0) {
+    perror("fclose");
+    exit(EXIT_FAILURE);
+  }
+  printf("File '%s' instructionFile written successfully.\n",
+         "instSegment.txt");
 }
 
 // main function
@@ -106,10 +172,8 @@ int main(int argc, char **argv) {
     perror("Failed to open file");
     return 1;
   }
-
   int result = yyparse();
   fclose(yyin);
-
   if (result == 0) {
     print_ast_json(ast_root, stdout);
     initTraversal(ast_root);
@@ -123,7 +187,8 @@ int main(int argc, char **argv) {
         break;
       case instruction:
         fprintf(stderr, " (opcode: %s)\n",
-                node->as.instruction.opcode ? node->as.instruction.opcode : "(nil)");
+                node->as.instruction.opcode ? node->as.instruction.opcode
+                                            : "(nil)");
         break;
       case labelDef:
       case labelRef:
@@ -135,8 +200,9 @@ int main(int argc, char **argv) {
                 node->as.reg.name ? node->as.reg.name : "(nil)");
         break;
       case literal:
-        fprintf(stderr, " (value: %s)\n",
-                node->as.literal.value ? node->as.literal.value : "(nil)");
+        fprintf(stderr, " (value: %s, intValue: %d)\n",
+                node->as.literal.value ? node->as.literal.value : "(nil)",
+                node->as.literal.intValue);
         break;
       case identifier:
         fprintf(stderr, " (name: %s)\n",
@@ -150,9 +216,12 @@ int main(int argc, char **argv) {
         fprintf(stderr, "\n");
       }
     }
-    secondPass();
+
     firstPass();
+    secondPass();
+
     printSymbolTable();
+    printDataTable();
   }
   return result;
 }

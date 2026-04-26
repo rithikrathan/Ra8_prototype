@@ -180,7 +180,7 @@ const char *data_type_str(dataType type) {
   case int16:
     return "int16";
   case chr:
-    return "char";
+    return "chr";
   case str:
     return "str";
   case boolean:

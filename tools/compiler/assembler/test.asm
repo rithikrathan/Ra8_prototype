@@ -6,7 +6,7 @@
 [__data__]
 	int8 hallo = 23
 	int8 hee  = 3
-	char helo  = 3
+	chr helo  = 3
 	str ello   = "hahah"
 	str ptr   *= 0xffff
 	; str LDI    = thishouldreturnanerror

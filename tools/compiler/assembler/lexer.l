@@ -31,7 +31,7 @@ const char* instructions[] = {
 };
 
 const char *dataTypes[] = {
-    "int8", "int16", "str", "bool", "char", NULL
+    "int8", "int16", "str", "bool", "chr", NULL
 };
 
 int is_instruction(const char *str) {
