@@ -115,8 +115,8 @@ void firstPass() {
         continue;
       }
       char *name = traversalCurr->children[0]->as.identifier.name;
-      int value = traversalCurr->children[1]->as.literal.intValue;
-      fprintf(stderr, "DEBUG: data '%s' value=%d addr=%d\n", name, value, dataAddress);
+      char *valStr = traversalCurr->children[1]->as.literal.value;
+      int value = atoi(valStr);
       put(&dataTable, name, dataAddress);
       dataValues[dataValuesCount++] = value;
       dataAddress++;

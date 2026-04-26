@@ -183,9 +183,9 @@ data_declaration:
     ;
 
 data_value:
-    NUM { $$ = createNode(literal, strdup(yytext), $1); }
-    | BIN { $$ = createNode(literal, strdup(yytext), $1); }
-    | HEX { $$ = createNode(literal, strdup(yytext), $1); }
+    NUM { $$ = createNode(literal, strdup(yytext), (int)$1); }
+    | BIN { $$ = createNode(literal, strdup(yytext), (int)$1); }
+    | HEX { $$ = createNode(literal, strdup(yytext), (int)$1); }
     | STRING_LITERAL { $$ = createNode(literal, $1, 0); }
     | IDENTIFIER { $$ = createNode(literal, $1, 0); }
     ;
