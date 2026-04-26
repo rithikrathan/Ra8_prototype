@@ -36,14 +36,14 @@ struct hashMap *dataTable = NULL;
 int dataValues[MAX_DATA_ENTRIES];
 int dataValuesCount = 0;
 
-void put(struct hashMap **table, const char *key_str, int val) {
+void put(const char *key_str, int val) {
   struct hashMap *item;
-  HASH_FIND_STR(*table, key_str, item);
+  HASH_FIND_STR(symbolTable, key_str, item);
   if (item == NULL) {
     item = malloc(sizeof(struct hashMap));
     item->key = strdup(key_str);
     item->value = val;
-    HASH_ADD_KEYPTR(hh, *table, item->key, strlen(item->key), item);
+    HASH_ADD_KEYPTR(hh, symbolTable, item->key, strlen(item->key), item);
   } else {
     item->value = val;
   }
@@ -77,15 +77,26 @@ void printDataTable() {
   printf("------------------\n");
 }
 
-void get(struct hashMap *table, const char *key_str) {
+void get(const char *key_str) {
   struct hashMap *item;
-
-  HASH_FIND_STR(table, key_str, item);
-
+  HASH_FIND_STR(symbolTable, key_str, item);
   if (item != NULL) {
     printf("Found [%s] : %d\n", item->key, item->value);
   } else {
     printf("[%s] not found.\n", key_str);
+  }
+}
+
+void putData(const char *key_str, int val) {
+  struct hashMap *item;
+  HASH_FIND_STR(dataTable, key_str, item);
+  if (item == NULL) {
+    item = malloc(sizeof(struct hashMap));
+    item->key = strdup(key_str);
+    item->value = val;
+    HASH_ADD_KEYPTR(hh, dataTable, item->key, strlen(item->key), item);
+  } else {
+    item->value = val;
   }
 }
 
@@ -108,8 +119,7 @@ void firstPass() {
     }
     // address calculations
     if (traversalCurr->type == labelDef) {
-      put(&symbolTable, traversalCurr->as.label.name, symbolAddress);
-      symbolAddress++;
+      put(traversalCurr->as.label.name, symbolAddress);
     } else if (traversalCurr->type == dataDeclaration) {
       if (traversalCurr->as.dataDeclaration.type == str) {
         continue;
@@ -117,7 +127,7 @@ void firstPass() {
       char *name = traversalCurr->children[0]->as.identifier.name;
       char *valStr = traversalCurr->children[1]->as.literal.value;
       int value = atoi(valStr);
-      put(&dataTable, name, dataAddress);
+      putData(name, dataAddress);
       dataValues[dataValuesCount++] = value;
       dataAddress++;
     }
