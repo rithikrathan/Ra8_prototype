@@ -75,16 +75,14 @@ char *cleanup(int instruction, char *yt, int len) {
 }
 
 %}
+%define parse.error verbose
 
-
-// union to differentiate operands
 %union {
     int num;
     char *str;
     astNode *node;
 }
 
-// define tokens and types of tokens
 %token <str> INST REG LABELDEF LABELREF DATA_TYPE STRING_LITERAL IDENTIFIER
 %token <num> BIN HEX NUM
 %token DATASEGMENTSTART INSTSEGMENTSTART END EQUALS POINTER_EQUALS ','
@@ -113,7 +111,6 @@ root:
 sections:
     section {
         $$ = $1;
-        if ($$ != NULL) $$->nextSibling = NULL;
     }
     | sections section {
         $$ = $1;
@@ -135,8 +132,10 @@ section: data_section { $$ = $1;}
 data_section:
     DATASEGMENTSTART data_declarations END {
         $$ = createNode(section, "data");
-        if ($2 != NULL) {
-            addchild($$, $2);
+        astNode *current = $2;
+        while (current != NULL) {
+            addchild($$, current);
+            current = current->nextSibling;
         }
     }
     ;
@@ -165,8 +164,8 @@ data_declaration:
             addchild($$, idNode);
             addchild($$, $4);
         } else {
-            yyerror("Reserved words cannot be used as an identifier");
-            YYERROR;
+            yyerror("Reserved word cannot be used as identifier");
+            $$ = NULL;
         }
     }
     | DATA_TYPE IDENTIFIER POINTER_EQUALS data_value {
@@ -176,8 +175,8 @@ data_declaration:
             addchild($$, idNode);
             addchild($$, $4);
         } else {
-            yyerror("Reserved words cannot be used as an identifier");
-            YYERROR;
+            yyerror("Reserved word cannot be used as identifier");
+            $$ = NULL;
         }
     }
     ;
@@ -193,8 +192,10 @@ data_value:
 inst_section:
     INSTSEGMENTSTART lines END {
         $$ = createNode(section, "inst");
-        if ($2 != NULL) {
-            addchild($$, $2);
+        astNode *current = $2;
+        while (current != NULL) {
+            addchild($$, current);
+            current = current->nextSibling;
         }
     }
     ;
@@ -226,7 +227,6 @@ line:
         while (op != NULL) {
             addchild($$, op);
             astNode *next = op->nextSibling;
-            op->nextSibling = NULL;
             op = next;
         }
     }
@@ -252,6 +252,9 @@ operand:
     | LABELREF {
         $$ = createNode(labelRef, cleanup(1, $1, strlen($1)));
      }
+    | IDENTIFIER {
+        $$ = createNode(identifier, $1);
+     }
     | NUM { $$ = createNode(literal, strdup(yytext), $1); }
     | BIN { $$ = createNode(literal, strdup(yytext), $1); }
     | HEX { $$ = createNode(literal, strdup(yytext), $1); }
@@ -261,5 +264,6 @@ operand:
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "line: %d => Parse error: %s\n",yylineno,s);
+    extern int yylineno;
+    fprintf(stderr, "line %d: %s\n", yylineno, s);
 }

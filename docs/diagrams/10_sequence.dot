@@ -1,0 +1,47 @@
+digraph Sequence {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=1.5];
+    ranksep=0.5;
+    
+    label="Figure 10: Sequence Diagram";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph actors {
+        rank=same;
+        
+        user [label="User", shape=ellipse];
+        asm [label="Assembler", shape=rect];
+        parser [label="Parser", shape=rect];
+        gen [label="CodeGen", shape=rect];
+        emu [label="Emulator", shape=rect];
+        cpu [label="CPU", shape=rect];
+    }
+    
+    user -> asm [label="1. Write .asm", dir=both, arrowhead=normal];
+    asm -> parser [label="2. Tokenize", dir=both, arrowhead=normal];
+    parser -> gen [label="3. Build AST", dir=both, arrowhead=normal];
+    gen -> emu [label="4. Generate .bin", dir=both, arrowhead=normal];
+    emu -> cpu [label="5. Load to memory", dir=both, arrowhead=normal];
+    
+    subgraph exec {
+        label="Execution Loop";
+        
+        fetch [label="Fetch\n(instMemory[PC])", shape=box];
+        decode [label="Decode\n(opcode)", shape=box];
+        exec_inst [label="Execute\n(ALU/memory)", shape=box];
+        update [label="Update\n(reg/flags)", shape=box];
+        check [label="Check\nHalted?", shape=diamond];
+    }
+    
+    cpu -> fetch;
+    cpu -> decode;
+    cpu -> exec_inst;
+    cpu -> update;
+    cpu -> check;
+    check -> cpu [label="No"];
+    check -> user [label="Yes", style=dashed];
+}

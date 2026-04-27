@@ -51,10 +51,6 @@ astNode *getNextNode() {
     if (curr == NULL)
       continue;
 
-    if (curr->nextSibling != NULL) {
-      push(curr->nextSibling);
-    }
-
     for (int i = curr->childCount - 1; i >= 0; i--) {
       if (curr->children[i] != NULL) {
         push(curr->children[i]);
@@ -238,7 +234,7 @@ void print_node_json(astNode *node, FILE *out, int *node_id, int parent_id) {
     break;
   }
 
-  fprintf(out, "\" shape=box];\n");
+  fprintf(out, "\"];\n");
 
   if (parent_id >= 0) {
     fprintf(out, "  %d -> %d;\n", parent_id, this_id);
@@ -250,20 +246,17 @@ void print_node_json(astNode *node, FILE *out, int *node_id, int parent_id) {
 }
 
 void print_ast_json(astNode *node, FILE *out) {
-  printf("helo\n");
   if (node == NULL) {
-    fprintf(out, "{\n  \"nodes\": [],\n  \"edges\": []\n}\n");
+    fprintf(out, "digraph AST {\n}\n");
     return;
   }
 
-  fprintf(out, "{\n");
-  fprintf(out, "  \"nodes\": [\n");
+  fprintf(out, "digraph AST {\n");
+  fprintf(out, "  node [shape=box];\n");
 
   int node_id = 0;
   print_node_json(node, out, &node_id, -1);
 
-  fprintf(out, "  ],\n");
-  fprintf(out, "  \"edges\": []\n");
   fprintf(out, "}\n");
 }
 

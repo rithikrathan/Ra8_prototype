@@ -1,0 +1,75 @@
+digraph ProcessorDataPath {
+    rankdir=LR;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=1.5];
+    
+    label="Figure 2: Processor Data Path";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph cluster_control {
+        label="Control Unit";
+        fillcolor=lightgray;
+        style=filled;
+        
+        ctrl [label="Control\nUnit", shape=ellipse, fillcolor="#ddd"];
+    }
+    
+    subgraph cluster_regfile {
+        label="Register File";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        node [shape=record, fillcolor="#c3e6cb"];
+        regA [label="A"];
+        regB [label="B"];
+        regC [label="C"];
+        regD [label="D"];
+        regE [label="E"];
+        regF [label="F"];
+        regG [label="G"];
+        regH [label="H"];
+    }
+    
+    subgraph cluster_special {
+        label="Special Registers";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        node [shape=record, fillcolor="#ffeeba"];
+        pc [label="PC"];
+        sp [label="SP"];
+        si [label="SI"];
+        di [label="DI"];
+        status [label="Status\n(Flags)"];
+    }
+    
+    subgraph cluster_alu {
+        label="ALU";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        alu [label="ALU", shape=ellipse, fillcolor="#f5c6cb"];
+    }
+    
+    subgraph cluster_memory {
+        label="Memory";
+        fillcolor="#d1ecf1";
+        style=filled;
+        
+        inst_mem [label="Instruction\nMemory"];
+        data_mem [label="Data\nMemory"];
+    }
+    
+    ctrl -> regA;
+    ctrl -> regB;
+    ctrl -> regC;
+    regA -> alu [label="A"];
+    regB -> alu [label="B"];
+    alu -> regA [label="Result"];
+    regA -> data_mem;
+    inst_mem -> pc [label="Fetch"];
+    pc -> ctrl [label="PC"];
+}

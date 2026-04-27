@@ -1,0 +1,46 @@
+digraph MemoryMap {
+    rankdir=LR;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    
+    label="Figure 12: Memory Map";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph inst_memory {
+        label="Instruction Memory (64KB)";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        im_start [label="0x0000\nCode Start", shape=record, fillcolor="#c3e6cb"];
+        im_prog [label="0x0000-0x00FF\nProgram Code", shape=record, fillcolor="#c3e6cb"];
+        im_ro [label="0x0100-0xFFFF\nFree", shape=record, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph data_memory {
+        label="Data Memory (64KB)";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        dm_start [label="0x0000\nData Start", shape=record, fillcolor="#ffeeba"];
+        dm_heap [label="0x0000-0x00FF\nHeap/Variables", shape=record, fillcolor="#ffeeba"];
+        dm_stack [label="0xFF00-0xFFFF\nStack (grows down)", shape=record, fillcolor="#ffeeba"];
+        dm_sp [label="SP initialized\nto 0xFFFF", shape=record, fillcolor="#f0ad4e"];
+    }
+    
+    subgraph segments {
+        label="Data Segment";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        ds_label [label=".data directive", shape=box, fillcolor="#f5c6cb"];
+        ds_values [label="Initial values\nat fixed addresses", shape=record, fillcolor="#f5c6cb"];
+    }
+    
+    im_start -> im_prog;
+    im_prog -> im_ro;
+    dm_start -> dm_heap;
+    dm_heap -> dm_stack;
+    ds_label -> ds_values;
+}

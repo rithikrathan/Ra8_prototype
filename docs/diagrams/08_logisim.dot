@@ -1,0 +1,43 @@
+digraph LogisimHierarchy {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=2];
+    
+    label="Figure 8: Logisim Circuit Files";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph circuits {
+        label="Circuit Files";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        alu_circ [label="Arithmetic_and_Logic_unit.circ\n\nALU Implementation", shape=record, fillcolor="#c3e6cb"];
+        reg_circ [label="registers_and_memory.circ\n\nGPR, PC, SP, SI, DI", shape=record, fillcolor="#c3e6cb"];
+        pipe_circ [label="pipeline.circ\n\nPipeline Registers", shape=record, fillcolor="#c3e6cb"];
+        cpu_circ [label="Ra8_prototype.circ\n\nComplete CPU", shape=record, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph internals {
+        label="Internal Components";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        adder [label="Adder/Subtractor", shape=box, fillcolor="#ffeeba"];
+        mux [label="MUX", shape=box, fillcolor="#ffeeba"];
+        reg_file [label="Register File", shape=box, fillcolor="#ffeeba"];
+        counter [label="Counter", shape=box, fillcolor="#ffeeba"];
+        pl_reg [label="Pipeline Reg", shape=box, fillcolor="#ffeeba"];
+    }
+    
+    alu_circ -> adder;
+    alu_circ -> mux;
+    reg_circ -> reg_file;
+    reg_circ -> counter;
+    pipe_circ -> pl_reg;
+    cpu_circ -> alu_circ;
+    cpu_circ -> reg_circ;
+    cpu_circ -> pipe_circ;
+}

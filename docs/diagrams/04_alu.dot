@@ -1,0 +1,99 @@
+digraph ALU {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    
+    label="Figure 4: ALU Internal Structure";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph inputs {
+        label="Inputs";
+        fillcolor=lightgray;
+        style=filled;
+        
+        Ain [label="Ain\n(8-bit)", shape=record, fillcolor="#e8f4f8"];
+        Bin [label="Bin\n(8-bit)", shape=record, fillcolor="#e8f4f8"];
+        Iin [label="Iin\n(Immediate)", shape=record, fillcolor="#e8f4f8"];
+        mode [label="Mode\n(Arith/Logic)", shape=diamond, fillcolor="#fff3cd"];
+        op [label="Operation\n(4-bit)", shape=diamond, fillcolor="#fff3cd"];
+    }
+    
+    subgraph adder {
+        label="Adder/Subtractor";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        add [label="Adder", shape=ellipse, fillcolor="#c3e6cb"];
+        sub [label="Subtractor", shape=ellipse, fillcolor="#c3e6cb"];
+        carry_in [label="Carry In", shape=diamond, fillcolor="#ffeeba"];
+        addc [label="ADC\n(Add+Carry)", shape=box, fillcolor="#c3e6cb"];
+        subb [label="SBB\n(Sub+Borrow)", shape=box, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph logic {
+        label="Logic Unit";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        and_gate [label="AND", shape=ellipse, fillcolor="#ffeeba"];
+        or_gate [label="OR", shape=ellipse, fillcolor="#ffeeba"];
+        xor_gate [label="XOR", shape=ellipse, fillcolor="#ffeeba"];
+        not_gate [label="NOT", shape=ellipse, fillcolor="#ffeeba"];
+        xnor_gate [label="XNOR", shape=ellipse, fillcolor="#ffeeba"];
+    }
+    
+    subgraph shifter {
+        label="Shifter/Rotator";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        rs [label="RS\n(Right Shift)", shape=ellipse, fillcolor="#f5c6cb"];
+        ls [label="LS\n(Left Shift)", shape=ellipse, fillcolor="#f5c6cb"];
+        rr [label="RR\n(Right Rotate)", shape=ellipse, fillcolor="#f5c6cb"];
+        lr [label="LR\n(Left Rotate)", shape=ellipse, fillcolor="#f5c6cb"];
+        ars [label="ARS\n(Arith RS)", shape=ellipse, fillcolor="#f5c6cb"];
+    }
+    
+    subgraph mux {
+        label="MUX";
+        fillcolor="#cce5ff";
+        style=filled;
+        
+        result_mux [label="Result\nMUX", shape=diamond, fillcolor="#b8daff"];
+    }
+    
+    subgraph output {
+        label="Outputs";
+        fillcolor=lightgray;
+        style=filled;
+        
+        result [label="Result\n(8-bit)", shape=record, fillcolor="#d6eaf8"];
+        flags [label="Flags\n(8-bit)", shape=record, fillcolor="#d6eaf8"];
+    }
+    
+    Ain -> add;
+    Ain -> sub;
+    Ain -> and_gate;
+    Ain -> or_gate;
+    Ain -> xor_gate;
+    Ain -> rs;
+    Ain -> ls;
+    Bin -> add;
+    Bin -> sub;
+    Bin -> and_gate;
+    Bin -> or_gate;
+    Bin -> xor_gate;
+    Bin -> rs;
+    Bin -> ls;
+    add -> result_mux;
+    sub -> result_mux;
+    and_gate -> result_mux;
+    or_gate -> result_mux;
+    xor_gate -> result_mux;
+    rs -> result_mux;
+    ls -> result_mux;
+    result_mux -> result;
+    result -> flags [label="generate"];
+}

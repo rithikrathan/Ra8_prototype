@@ -1,0 +1,58 @@
+digraph RegisterFile {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    
+    label="Figure 3: Register File Structure";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph cluster_gpr {
+        label="General Purpose Registers (8-bit)";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        A [label="A\n accumulator", shape=record, fillcolor="#c3e6cb"];
+        B [label="B\n general", shape=record, fillcolor="#c3e6cb"];
+        C [label="C\n general", shape=record, fillcolor="#c3e6cb"];
+        D [label="D\n general", shape=record, fillcolor="#c3e6cb"];
+        E [label="E\n general", shape=record, fillcolor="#c3e6cb"];
+        F [label="F\n general", shape=record, fillcolor="#c3e6cb"];
+        G [label="G\n general", shape=record, fillcolor="#c3e6cb"];
+        H [label="H\n general", shape=record, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph cluster_temp {
+        label="Temporary Registers";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        templ [label="Templ\n(PC low)", shape=record, fillcolor="#ffeeba"];
+        temph [label="Temph\n(PC high)", shape=record, fillcolor="#ffeeba"];
+        rng [label="RNG\n(random)", shape=record, fillcolor="#ffeeba"];
+    }
+    
+    subgraph cluster_special {
+        label="Special Purpose Registers";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        pc [label="PC\n(16-bit)", shape=record, fillcolor="#f5c6cb"];
+        sp [label="SP\n(16-bit)", shape=record, fillcolor="#f5c6cb"];
+        si [label="SI\n(Source Index)", shape=record, fillcolor="#f5c6cb"];
+        di [label="DI\n(Dest Index)", shape=record, fillcolor="#f5c6cb"];
+        ret [label="Return\nRegister", shape=record, fillcolor="#f5c6cb"];
+    }
+    
+    subgraph cluster_flags {
+        label="Status Register (8-bit)";
+        fillcolor="#cce5ff";
+        style=filled;
+        
+        status [label="Bit 0: Z (Zero)\nBit 1: P (Parity)\nBit 2: Halted\nBit 3: AC\nBit 4: C (Carry)\nBit 5: OV (Overflow)\nBit 6: Reserved\nBit 7: S (Sign)", shape=record, fillcolor="#b8daff"];
+    }
+    
+    A -> B -> C -> D -> E -> F -> G -> H [style=invis];
+    pc -> sp -> si -> di [style=invis];
+}

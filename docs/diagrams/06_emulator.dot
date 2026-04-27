@@ -1,0 +1,74 @@
+digraph EmulatorStructure {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=2];
+    
+    label="Figure 6: Emulator Architecture";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph init {
+        label="Initialization";
+        fillcolor=lightgray;
+        style=filled;
+        
+        init [label="NewCPU()", shape=ellipse, fillcolor="#e8f4f8"];
+        load [label="Load\nProgram", shape=ellipse, fillcolor="#e8f4f8"];
+    }
+    
+    subgraph reg {
+        label="Registers";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        regs [label="registers[13]\nA,B,C,D,E,F,G,H\nTempl,Temph,Rng", shape=record, fillcolor="#c3e6cb"];
+        pc_reg [label="PC\n(16-bit)", shape=record, fillcolor="#c3e6cb"];
+        sp_reg [label="SP\n(16-bit)", shape=record, fillcolor="#c3e6cb"];
+        status_reg [label="Status\n(flags)", shape=record, fillcolor="#c3e6cb"];
+        branch [label="canBranch\n(bool)", shape=record, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph mem {
+        label="Memory";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        inst_mem [label="instMemory\n[65536]", shape=record, fillcolor="#ffeeba"];
+        data_mem [label="dataMemory\n[65536]", shape=record, fillcolor="#ffeeba"];
+    }
+    
+    subgraph fde {
+        label="Fetch-Decode-Execute";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        fetch [label="Fetch()", shape=ellipse, fillcolor="#f5c6cb"];
+        decode [label="Decode()", shape=ellipse, fillcolor="#f5c6cb"];
+        execute [label="Execute()", shape=ellipse, fillcolor="#f5c6cb"];
+    }
+    
+    subgraph output {
+        label="Output";
+        fillcolor="#cce5ff";
+        style=filled;
+        
+        dump [label="Dump\nState", shape=ellipse, fillcolor="#b8daff"];
+    }
+    
+    init -> load;
+    load -> inst_mem;
+    load -> data_mem;
+    load -> pc_reg;
+    load -> sp_reg;
+    load -> status_reg;
+    
+    {rank=same; fetch -> decode -> execute;}
+    fetch -> inst_mem [label="read"];
+    decode -> execute;
+    execute -> regs;
+    execute -> status_reg [label="flags"];
+    execute -> branch;
+    execute -> output [style=dashed];
+}

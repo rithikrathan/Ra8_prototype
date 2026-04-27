@@ -1,0 +1,50 @@
+digraph DFD {
+    rankdir=LR;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=2];
+    
+    label="Figure 9: Data Flow Diagram (Level 1)";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    user [label="User", shape=ellipse, fillcolor="#e8f4f8"];
+    
+    asm_file [label="Assembly\nSource", shape=record, fillcolor="#d4edda"];
+    bin_file [label="Machine\nCode", shape=record, fillcolor="#d4edda"];
+    ctrl_file [label="Control\nSignals", shape=record, fillcolor="#d4edda"];
+    output [label="Execution\nOutput", shape=record, fillcolor="#d4edda"];
+    
+    assembler [label="Assembler\n(lex/yacc)", shape=doubleoctagon, fillcolor="#fff3cd"];
+    emulator [label="Emulator\n(Go)", shape=doubleoctagon, fillcolor="#fff3cd"];
+    
+    lexer [label="Lexer", shape=box, fillcolor="#f8d7da"];
+    parser [label="Parser", shape=box, fillcolor="#f8d7da"];
+    codegen [label="Code\nGenerator", shape=box, fillcolor="#f8d7da"];
+    
+    fetch [label="Fetch", shape=box, fillcolor="#cce5ff"];
+    decode [label="Decode", shape=box, fillcolor="#cce5ff"];
+    execute [label="Execute", shape=box, fillcolor="#cce5ff"];
+    memory [label="Memory\nAccess", shape=box, fillcolor="#cce5ff"];
+    
+    user -> asm_file;
+    asm_file -> assembler;
+    
+    assembler -> lexer;
+    assembler -> parser;
+    assembler -> codegen;
+    
+    codegen -> bin_file;
+    codegen -> ctrl_file;
+    
+    bin_file -> emulator;
+    
+    emulator -> fetch;
+    emulator -> decode;
+    emulator -> execute;
+    execute -> memory;
+    
+    execute -> output;
+    output -> user;
+}

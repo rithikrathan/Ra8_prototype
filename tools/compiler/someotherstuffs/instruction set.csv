@@ -1,0 +1,43 @@
+TYPE,INSTRUCTION,instrID,SIZE,select,Cuselect
+S-type,nope,0,1,,
+S-type,halt,1,1,,
+Arithmetic C-type,add,2,3,0,0
+Arithmetic C-type,adi,3,4,0,0
+Arithmetic C-type,adc,4,3,0,0
+Arithmetic C-type,sub,5,3,1,0
+Arithmetic C-type,mul,6,3,2,0
+Arithmetic C-type,muh,7,3,3,0
+Arithmetic C-type,mil,8,4,2,0
+Arithmetic C-type,mih,9,4,3,0
+Arithmetic C-type,div,10,3,4,0
+Arithmetic C-type,dii,11,4,4,0
+Arithmetic C-type,rem,12,3,5,0
+Arithmetic C-type,rei,13,4,5,0
+Arithmetic C-type,neg,14,3,6,0
+Logical C-type,and,15,3,14,0
+Logical C-type,ani,16,4,14,0
+Logical C-type,or,17,3,16,0
+Logical C-type,ori,18,4,16,0
+Logical C-type,not,19,3,12,0
+Logical C-type,xor,20,3,18,0
+Logical C-type,xri,21,4,18,0
+Logical C-type,xnor,22,3,19,0
+Logical C-type,xnri,23,4,19,0
+Logical C-type,cmp,24,3,,0
+Logical C-type,rs,25,3,8,0
+Logical C-type,ls,26,3,7,0
+Logical C-type,rr,27,3,9,0
+Logical C-type,lr,28,3,10,0
+Move,mv,29,2,,3
+Load,ld,30,4,,1
+General R-type,ldi,31,,,
+Store,st,32,4,,2
+General R-type,sti,33,,,
+Special R-type,lin,34,,,
+Special R-type,sin,35,,,
+Special R-type,iin,36,,,
+Special R-type,din,37,,,
+Special R-type,push,38,,,
+Special R-type,pop,39,,,
+Special R-type,rpc,40,,,
+Special R-type,jmp,41,,,

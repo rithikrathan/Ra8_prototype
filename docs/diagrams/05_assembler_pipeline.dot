@@ -1,0 +1,73 @@
+digraph AssemblerPipeline {
+    rankdir=LR;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=2];
+    
+    label="Figure 5: Assembler Pipeline";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph input {
+        label="Input";
+        fillcolor=lightgray;
+        style=filled;
+        
+        asm_src [label="Assembly\nSource (.asm)", shape=record, fillcolor="#e8f4f8"];
+    }
+    
+    subgraph stage1 {
+        label="Lexer (lex.l)";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        lexer [label="Tokenize", shape=ellipse, fillcolor="#c3e6cb"];
+        tokens [label="Token\nStream", shape=record, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph stage2 {
+        label="Parser (parser.y)";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        parser [label="Parse", shape=ellipse, fillcolor="#ffeeba"];
+        ast [label="AST", shape=record, fillcolor="#ffeeba"];
+    }
+    
+    subgraph stage3 {
+        label="Semantic Analysis";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        symbol [label="Symbol\nTable", shape=record, fillcolor="#f5c6cb"];
+        sem [label="Semantic\nAnalysis", shape=ellipse, fillcolor="#f5c6cb"];
+    }
+    
+    subgraph stage4 {
+        label="Code Generator (assembler.c)";
+        fillcolor="#cce5ff";
+        style=filled;
+        
+        codegen [label="Generate\nMachine Code", shape=ellipse, fillcolor="#b8daff"];
+        bin [label="Machine Code\n(.bin)", shape=record, fillcolor="#b8daff"];
+    }
+    
+    subgraph error {
+        label="Error Handling";
+        fillcolor="#f0ad4e";
+        style=filled;
+        
+        errors [label="Error\nMessages", shape=record, fillcolor="#f0ad4e"];
+    }
+    
+    asm_src -> lexer;
+    lexer -> tokens;
+    tokens -> parser;
+    parser -> ast;
+    ast -> sem;
+    sem -> symbol [style=dashed];
+    sem -> codegen;
+    codegen -> bin;
+    sem -> errors [style=dashed, color=red];
+}

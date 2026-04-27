@@ -1,34 +1,39 @@
 CC = gcc
 FLEX = flex
 BISON = bison
-LEXER = lexer.l
-PARSER = parser.y
+
 PARSER_OUT = parser.tab.c
 PARSER_HDR = parser.tab.h
 LEX_OUT = lex.yy.c
 OUTPUT = assembler
 
+PYTHON = python3
+PYASM_DIR = python
+PYASM = assembler.py
+
 all: $(OUTPUT)
 
-$(PARSER_OUT) $(PARSER_HDR): $(PARSER)
-	$(BISON) -d $(PARSER)
+$(PARSER_OUT) $(PARSER_HDR): parser.y
+	$(BISON) -d parser.y
 
-$(LEX_OUT): $(LEXER)
-	$(FLEX) $(LEXER)
+$(LEX_OUT): lexer.l
+	$(FLEX) lexer.l
 
 $(OUTPUT): assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c
-	$(CC) assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c  -o $(OUTPUT)
+	$(CC) assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c -o $(OUTPUT)
 
 run: $(OUTPUT)
 	./$(OUTPUT) test.asm
 
-vis: $(OUTPUT)
-	.venv/bin/python visualize_ast.py test.asm --text
+tree: $(OUTPUT)
+	$(PYTHON) visualize_ast.py test.asm --text
 
-vis-svg: $(OUTPUT)
-	.venv/bin/python visualize_ast.py test.asm
+python:
+	(cd $(PYASM_DIR) && echo "1" | $(PYTHON) $(PYASM))
+
+cheeky: run python
 
 clean:
-	rm -f $(LEX_OUT) $(PARSER_OUT) $(PARSER_HDR) $(OUTPUT) *.dot *.png *.svg *.pdf
+	rm -f $(LEX_OUT) $(PARSER_OUT) $(PARSER_HDR) $(OUTPUT)
 
-.PHONY: all compile run clean visualize visualize-svg
+.PHONY: all run tree python cheeky clean

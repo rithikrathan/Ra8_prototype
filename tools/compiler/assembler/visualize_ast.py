@@ -22,27 +22,101 @@ def parse_dot_format(text):
     nodes = {}
     edges = []
 
-    edge_pattern = re.compile(r'(\d+)\s*->\s*(\d+);')
+    node_pattern = re.compile(r'\s*(\d+)\s*\[label="([^"]*)"')
+    edge_pattern = re.compile(r'\s*(\d+)\s*->\s*(\d+)')
 
     for line in text.split('\n'):
-        line = line.strip()
-
-        if 'shape=box' in line and '[label=' in line:
-            id_match = re.match(r'(\d+)', line)
-            if id_match:
-                node_id = int(id_match.group(1))
-                label_start = line.find('[label="') + 8
-                label_end = line.rfind('" shape=box')
-                if label_start > 7 and label_end > label_start:
-                    label = line[label_start:label_end].replace('\\n', '\n')
-                    nodes[node_id] = label
-                    continue
+        node_match = node_pattern.match(line)
+        if node_match:
+            node_id = int(node_match.group(1))
+            label = node_match.group(2).replace('\\n', '\n')
+            nodes[node_id] = label
+            continue
 
         edge_match = edge_pattern.match(line)
         if edge_match:
             from_id = int(edge_match.group(1))
             to_id = int(edge_match.group(2))
             edges.append((from_id, to_id))
+
+    return nodes, edges
+
+def parse_node_format(text):
+    """Parse the 'node: type (key: value)' format from assembler."""
+    nodes = {}
+    edges = []
+
+    node_pattern = re.compile(r'node:\s*(\w+)\s*(?:\(([^)]*)\))?')
+
+    for line in text.split('\n'):
+        line = line.strip()
+        if not line.startswith('node:'):
+            continue
+
+        match = node_pattern.match(line)
+        if not match:
+            continue
+
+        node_type = match.group(1)
+        attrs_str = match.group(2) or ""
+
+        attrs = {}
+        if attrs_str:
+            for attr in attrs_str.split(','):
+                attr = attr.strip()
+                if ':' in attr:
+                    key, value = attr.split(':', 1)
+                    attrs[key.strip()] = value.strip()
+
+        label = f"type: {node_type}"
+        for key, value in attrs.items():
+            if key not in ('intValue',):
+                label += f"\n{key}: {value}"
+
+        node_id = len(nodes)
+        nodes[node_id] = label
+
+    section_parents = {}
+    section_types = {'section': 'section'}
+
+    for node_id, label in nodes.items():
+        parts = label.split('\n')
+        node_type = parts[0].replace('type: ', '')
+
+        if node_type == 'section':
+            section_parents[node_id] = None
+        elif node_type == 'dataDeclaration':
+            for sid in sorted(section_parents.keys(), reverse=True):
+                if section_parents[sid] is None:
+                    section_parents[sid] = node_id
+                    edges.append((sid, node_id))
+                    break
+        elif node_type in ('instruction', 'labelDef'):
+            for sid in sorted(section_parents.keys(), reverse=True):
+                if 'inst' in nodes.get(sid, '').lower():
+                    parent_id = sid
+                    while parent_id is not None:
+                        parent_label = nodes.get(parent_id, '')
+                        parent_type = parent_label.split('\n')[0].replace('type: ', '')
+                        if parent_type == 'section' and 'inst' in parent_label.lower():
+                            break
+                        parent_id = None
+                        for eid, efrom in enumerate(edges):
+                            if efrom[1] == sid and eid not in [0]:
+                                parent_id = efrom[0]
+                                break
+                    if parent_id is not None:
+                        edges.append((parent_id, node_id))
+                        break
+                    edges.append((sid, node_id))
+                    break
+        elif node_type in ('identifier', 'literal', 'reg'):
+            for pid in range(node_id - 1, -1, -1):
+                if pid in nodes:
+                    pt = nodes[pid].split('\n')[0].replace('type: ', '')
+                    if pt in ('dataDeclaration', 'instruction', 'labelDef', 'node'):
+                        edges.append((pid, node_id))
+                        break
 
     return nodes, edges
 
@@ -90,6 +164,11 @@ def print_text_tree(nodes, edges):
     """Print tree with proper box-drawing characters."""
     prefixes = set()
     print_node(0, nodes, edges, "", True, prefixes, [])
+
+def get_display_label(label):
+    """Extract display string from node label."""
+    parts = label.split('\n')
+    return '\n'.join(parts)
 
 def generate_dot(nodes, edges):
     """Generate DOT digraph string from parsed nodes/edges."""
@@ -143,6 +222,8 @@ def main():
                        help='Output format (default: svg)')
     parser.add_argument('--text', action='store_true',
                        help='Print text tree instead of graph')
+    parser.add_argument('--dot', action='store_true',
+                       help='Print DOT source to stdout')
     parser.add_argument('--view', action='store_true',
                        help='Open the output file after rendering')
 
@@ -155,7 +236,9 @@ def main():
     print(f"Parsing {args.input}...", file=sys.stderr)
     assembler_output = run_assembler(args.input)
 
-    nodes, edges = parse_dot_format(assembler_output)
+    nodes, edges = parse_node_format(assembler_output)
+    if not nodes:
+        nodes, edges = parse_dot_format(assembler_output)
     print(f"Found {len(nodes)} nodes and {len(edges)} edges", file=sys.stderr)
 
     if not nodes:
@@ -164,6 +247,12 @@ def main():
 
     if args.text:
         print_text_tree(nodes, edges)
+        return
+
+    dot_content = generate_dot(nodes, edges)
+
+    if args.dot:
+        print(dot_content)
         return
 
     base_name = os.path.splitext(os.path.basename(args.input))[0]

@@ -1,0 +1,74 @@
+digraph VerilogHierarchy {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=2];
+    
+    label="Figure 7: Verilog Module Hierarchy";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph top {
+        label="Top Level";
+        fillcolor=lightgray;
+        style=filled;
+        
+        pipeline [label="pipeline.v", shape=record, fillcolor="#e8f4f8"];
+    }
+    
+    subgraph units {
+        label="Functional Units";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        gprf [label="gprf.v\n(GPR)", shape=record, fillcolor="#c3e6cb"];
+        alu [label="alu.v\n(ALU)", shape=record, fillcolor="#c3e6cb"];
+        mem [label="mainMemory.v\n(Memory)", shape=record, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph special {
+        label="Special Registers";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        pc [label="programCounter.v", shape=record, fillcolor="#ffeeba"];
+        sp [label="stackPointer.v", shape=record, fillcolor="#ffeeba"];
+        si [label="indexRegister.v\n(SI)", shape=record, fillcolor="#ffeeba"];
+        di [label="indexRegister.v\n(DI)", shape=record, fillcolor="#ffeeba"];
+        ret [label="returnRegister.v", shape=record, fillcolor="#ffeeba"];
+    }
+    
+    subgraph test {
+        label="Testbenches";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        tb_alu [label="alu_tb.v", shape=record, fillcolor="#f5c6cb"];
+        tb_pc [label="programCounter_tb.v", shape=record, fillcolor="#f5c6cb"];
+        tb_sp [label="stackPointer_tb.v", shape=record, fillcolor="#f5c6cb"];
+        tb_mem [label="mainMemory_tb.v", shape=record, fillcolor="#f5c6cb"];
+        tb_grpf [label="gprf_tb.v", shape=record, fillcolor="#f5c6cb"];
+        tb_ir [label="indexRegister_tb.v", shape=record, fillcolor="#f5c6cb"];
+        tb_rr [label="returnRegister_tb.v", shape=record, fillcolor="#f5c6cb"];
+        tb_pc2mem [label="pc2mem_tb.v", shape=record, fillcolor="#f5c6cb"];
+    }
+    
+    pipeline -> alu;
+    pipeline -> gprf;
+    pipeline -> mem;
+    pipeline -> pc;
+    pipeline -> sp;
+    pipeline -> si;
+    pipeline -> di;
+    pipeline -> ret;
+    
+    gprf -> tb_grpf;
+    alu -> tb_alu;
+    pc -> tb_pc;
+    sp -> tb_sp;
+    mem -> tb_mem;
+    si -> tb_ir;
+    di -> tb_ir;
+    ret -> tb_rr;
+}

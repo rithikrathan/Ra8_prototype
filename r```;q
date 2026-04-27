@@ -1,0 +1,366 @@
+[33mcommit cc8c2284acb97208d62732b9b9df0b8e047b1a4d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;32mtrash[m[33m)[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Tue Apr 14 14:51:44 2026 +0530
+
+    almost finished
+
+[33mcommit ae416db1dbeff829c72dd2b4760656b40d97400d[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Apr 13 11:14:08 2026 +0530
+
+    i just got my first seg fault in c
+
+[33mcommit 5fb58f82811a82130f3b811f9670715979a5c231[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Apr 13 10:16:50 2026 +0530
+
+    commiting so i can switch branches
+
+[33mcommit c83b6c623f2ff1cbad135e3bc289288e4c716b34[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Apr 6 10:20:17 2026 +0530
+
+    clean label symbols in parser before AST creation, remove cleanup calls from AST printing
+
+[33mcommit 29fa5370f37619a52917bc6c0c1a9f3f20c67a88[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Sat Apr 4 15:48:55 2026 +0530
+
+    added basic setup for populating symbol table but the address calculation is pendig, foucs on semantic analysis first ig idk whatever
+
+[33mcommit f0e18d6742c6261f49294964ec4dd8bfc842c857[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Sat Apr 4 15:17:13 2026 +0530
+
+    working on the seamantic analyser and the symbol table
+
+[33mcommit fc5a17ebca7815273b19efa2096eefcdb8af9d96[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Tue Mar 31 18:16:06 2026 +0400
+
+    opencode did something, i will rewrite this ofcourse
+
+[33mcommit a010243ec1c8f226d3695acaf3c79ac1ab0b77ee[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 20:39:53 2026 +0400
+
+    assembler: update feedback.md with new problems solved
+
+[33mcommit 91a5f0503c2af37312ba783ed10c058efe2df85d[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 20:38:54 2026 +0400
+
+    assembler: fix AST to show values in all nodes, labels as siblings of instructions
+    
+    - Add literal.value field to store string representation
+    - Update parser to pass string values for NUM/BIN/HEX tokens via yytext
+    - Add parse_data_type() helper to convert type strings to enums
+    - Fix grammar: labels are now siblings of instructions, not parents
+    - Update visualizer to properly display node hierarchy
+    - All nodes now display their values (opcode, register name, label, etc.)
+
+[33mcommit d1af05fc33260d0efcce962d56f6fc55c07f5b50[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 20:01:32 2026 +0400
+
+    assembler: add visualize targets to makefile
+
+[33mcommit 6c0731963edbd8fa05b974fb22800f606cf2f9fc[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 20:01:14 2026 +0400
+
+    assembler: add .gitignore for build artifacts
+
+[33mcommit 18e0be8bd4a1325b95d930130ac990860bf1e09c[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 20:01:04 2026 +0400
+
+    assembler: add JSON AST output and Python visualization tool
+    
+    - Add print_ast_json() to ast.c for DOT format output
+    - Update parser.y to expose ast_root globally
+    - Update assembler.c to output AST JSON on successful parse
+    - Add visualize_ast.py with text tree and DOT/graphviz support
+    - Create Python venv with graphviz package
+
+[33mcommit a439f349d795a41b49ff6b05ee8d45659753c6ca[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 19:50:13 2026 +0400
+
+    assembler: add feedback documentation
+
+[33mcommit b49af7607fa69c76989a3518ef4fe7af6bfa01ce[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 17:02:17 2026 +0400
+
+    assembler: add Bison parser for AST construction
+    
+    - Add parser.y with grammar rules for data and inst sections
+    - Update lexer.l with yylval and state tracking
+    - Update makefile to compile parser with bison
+    - Simplify assembler.c to use yyparse()
+    - Fix test.asm syntax errors
+
+[33mcommit 7b4da8fc4e91d1e0ad2e26438e56bc7533aaf2c7[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 16:47:31 2026 +0400
+
+    assembler: save state before parser/AST implementation
+
+[33mcommit bce0eed97fb18fcd78c5392e487ef9c78af20fa7[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Mon Mar 30 14:22:54 2026 +0400
+
+    assembler: lexer and basic structure before AST parser implementation
+
+[33mcommit a147e52fea7408b673cc2bb8a6302273d6881431[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Sat Mar 28 17:22:18 2026 +0530
+
+    progress save
+
+[33mcommit 59575280cd67cd55f78e97ad74e255f13d3cb9e5[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Fri Mar 27 12:03:56 2026 +0530
+
+    random commit
+
+[33mcommit b5f38512a717f47cdbccfadc4230204a126db5b7[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat Mar 21 07:39:05 2026 +0530
+
+    idk bro
+
+[33mcommit 93419708bc027aeb7dfb25736402cde38d4eca5a[m[33m ([m[1;32mlistall[m[33m)[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Fri Mar 13 19:23:16 2026 +0530
+
+    some work done in the segment code and started implementing the basic assemblerw
+
+[33mcommit 69f790dea000adbc699a55135ca1767076b3adec[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Fri Mar 13 07:22:49 2026 +0530
+
+    first time using git rebase annd this conflict stuffs
+
+[33mcommit 0b005f225c86b8974180ab195fa3b62e038631fc[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Fri Mar 13 07:10:49 2026 +0530
+
+    adding segments
+
+[33mcommit e95f9e80e8c0bc47d339848092aa6b2010bccdb2[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat Mar 7 20:52:53 2026 +0530
+
+    RoguePM: Project snapshot
+
+[33mcommit aa2c7cb5f91ead1d85cb87ad7df929d1c56d6031[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Mon Feb 23 20:13:01 2026 +0530
+
+    RoguePM: Project snapshot
+
+[33mcommit 52fb1be4b90d3d5858c7498876823a3b3fe5a077[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Thu Feb 12 07:15:39 2026 +0530
+
+    implemented some instruction and skipped some
+
+[33mcommit f837c0f24818cb801965dd84871aff3d764e7500[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Feb 11 21:40:51 2026 +0530
+
+    i dont understand bro
+
+[33mcommit b5fc87c5e25619c578c766358ba8ae03b6515dd2[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Fri Jan 30 18:25:49 2026 +0530
+
+    i accidentally rsync deleted my main git repo
+
+[33mcommit 161a81512ca1485aa94d71eb283df92ed78cf683[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Fri Jan 30 07:28:36 2026 +0530
+
+    bruh im getting lazy
+
+[33mcommit 070b714ea9ba5f0646dc81f21d5457c0464be5bb[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Jan 28 07:15:20 2026 +0530
+
+    spearated emulator program to its own go file
+
+[33mcommit fdcfb6b5c182b2daa66bf0f8e1685214246eaf76[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sun Jan 25 22:41:42 2026 +0530
+
+    yeah i might have accidentally deleted somethings i may need in the future
+
+[33mcommit c2004f414bfe464ca9484743f01f0ad45261a136[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Nov 5 21:51:34 2025 +0530
+
+    restructured the verilog directory to automake unit and integration testing
+
+[33mcommit 9ceddb838abcf1f889f949cee80c4a80777f479c[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Mon Nov 3 07:01:44 2025 +0530
+
+    added stackpointer in verilog
+
+[33mcommit d88ab9a93dfb884f8c6b266f24716e9d8e7ef8c7[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sun Nov 2 16:16:22 2025 +0530
+
+    logisim is too slow to simulate im doing it in verilog
+
+[33mcommit 68f6a8b3ecfe58736771a16caa4e3b97dafe1986[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Aug 20 12:22:08 2025 +0530
+
+    RoguePM: Project snapshot
+
+[33mcommit 7c5f3be847656b89156c6296305bdb702b4b686f[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Thu Jun 26 20:15:57 2025 +0530
+
+    alu instructions is now working and tested with add and sub operations, need to find a way to implement halt instruction
+
+[33mcommit f2d8d58501394f3fc1068fc0c532d8f9b1ebfa7c[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Jun 25 18:08:09 2025 +0530
+
+    added move instruction and tested successfully, implemented circuit for alu but didnt test it with assembly program I CANT BELIEVE I'M ACTUALLY GETTING CLOSE TO A FULL WORKING PROCESSOR
+
+[33mcommit cb1c4dda4fcb6c39840f99a26801831ad2da1789[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Tue Jun 24 11:39:53 2025 +0530
+
+    implemented the load and store instructions in circuit and executed successfully
+
+[33mcommit b467dca65e15a2e84b01aeca6f2075b9ce268aa4[m
+Author: rithikrathan <rithikrathan.c@gmail.com>
+Date:   Sun Jun 22 11:40:24 2025 +0530
+
+    idk
+
+[33mcommit 6469f0f8fea4cd737534227c73349caa5b4742ac[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat Jun 21 09:11:18 2025 +0530
+
+    working on a program that generates control signals for me, its incomplete tho
+
+[33mcommit db69986c06e5f1f8a663bc44aeba15de5d7d93d1[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Jun 18 15:13:12 2025 +0530
+
+    working on some stuffs idk didnt test the previously added instructions because loading values into the register file is a lot of work so i decided to add load instruction and then test with it, basically I'm now working on load and store instruction both in circuit and in assember along with a .data section to generate a binary file for loading the instruction memory, just realised this commit message is so fucing long and im just adding a few more words to make it my longest commit message(so far)
+
+[33mcommit 7b798459532a40441925c34b1100eef44a82e107[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sun Jun 15 22:05:30 2025 +0530
+
+    working on assembler just with R-R arithmetic and logical instructions so i can test the circuit tommorow
+
+[33mcommit 8c17357728721fa1bdf3f8ed35fbb4bac754ac37[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat Jun 14 21:12:14 2025 +0530
+
+    working on decode unit currently can decode register,register arithmetic and logic instructions
+
+[33mcommit 239ca1cf6dc01c8fe390f97950bb3656d6d25aa2[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat May 10 19:34:34 2025 +0530
+
+    updated TODO.md
+
+[33mcommit 0130bfd401f4eeef4cf0cfc6d4703566fac2dd21[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Tue May 6 07:02:08 2025 +0530
+
+    added delay and insertNOPE signal and need to work in setting them based on the instructions that is currently being executed
+
+[33mcommit 59c2f771589b1eda669396fe6d15f02306e1f003[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat May 3 17:39:06 2025 +0530
+
+    i may have did something wrong
+
+[33mcommit 22726cdb3d1a4b36d62176a28d87ea1b4ed03ae1[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat May 3 17:38:01 2025 +0530
+
+    fixed some overcomplicated solution for a simple problem and also starting to finish the fetch unit by adding the necessary input and output signals
+
+[33mcommit 2af8b96776bb5559de8aa3fcb9598abd752f87cb[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sun Apr 27 09:23:52 2025 +0530
+
+    changed something
+
+[33mcommit ac39c0650144ebe5c9aa9e24c5fcbe5705f18d67[m
+Author: Rithik <63793903+rithikrathan@users.noreply.github.com>
+Date:   Sat Apr 26 20:58:57 2025 +0530
+
+    Update TODO.md
+
+[33mcommit 591190408a937963828e655538e70b109e83e76b[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat Apr 26 20:41:59 2025 +0530
+
+    working in the fetch unit and almost done but there is still one problem and i've explained it in the TODO.md file
+
+[33mcommit f0ec032c03acabd6c0ebec35e336cdd7578e8ab5[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Fri Apr 25 07:38:48 2025 +0530
+
+    working on fetch unit need to handle the logic thats shifts instr and imm values into their own path
+
+[33mcommit f96c1e5fa28dda0f8d1e239224be082433f679c1[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Thu Apr 24 22:33:29 2025 +0530
+
+    working on the pipeline fetch unit
+
+[33mcommit b9322b648e6b247f25d987a048c7b0726db640a1[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Apr 23 08:34:39 2025 +0530
+
+    forgot to update the todo
+
+[33mcommit a4c5b66eea8b6a625e657744dd1e36573977f961[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Wed Apr 23 08:28:36 2025 +0530
+
+    The alu is complete need to test it though
+
+[33mcommit 4ddabab04d761a52149b09c959622fbd5acb7aef[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Tue Apr 22 22:24:32 2025 +0530
+
+    the alu is almost done just need to add overflow flagg
+
+[33mcommit 072f42e10f410c48c100acc466bef18f1a2464dc[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Mon Apr 21 07:28:59 2025 +0530
+
+    working on alu and need to implement the flags
+
+[33mcommit 97536bf0b05c2623f06b8c91f16c8c68e1ddd092[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Mon Apr 21 06:02:40 2025 +0530
+
+    added some files
+
+[33mcommit e6d2b2c6388aad739ad9f55a98b666903147f9d0[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sun Apr 20 12:14:29 2025 +0530
+
+    added SpecialFunctionRegisters and need to test them and trouble shoot it
+
+[33mcommit 49fa76fa678517752aa80482da845039fdb8abab[m
+Author: Rithik <rithikrathan.c@gmail.com>
+Date:   Sat Apr 19 09:18:40 2025 +0530
+
+    8 bit pipelined cpu logisim and other programs

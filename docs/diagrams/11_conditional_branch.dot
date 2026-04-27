@@ -1,0 +1,75 @@
+digraph ConditionalBranch {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=navy, penwidth=2];
+    
+    label="Figure 11: Conditional Branching Flow";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph setup {
+        label="Setup";
+        fillcolor=lightgray;
+        style=filled;
+        
+        status [label="Status Register\n(Z,P,C,OV,AC,S)", shape=record, fillcolor="#e8f4f8"];
+    }
+    
+    subgraph con {
+        label="CON - Check Single Flag";
+        fillcolor="#d4edda";
+        style=filled;
+        
+        con_instr [label="CON mask", shape=box, fillcolor="#c3e6cb"];
+        con_check [label="(status & mask) != 0", shape=diamond, fillcolor="#c3e6cb"];
+    }
+    
+    subgraph cor {
+        label="COR - Check Any Flag";
+        fillcolor="#fff3cd";
+        style=filled;
+        
+        cor_instr [label="COR mask", shape=box, fillcolor="#ffeeba"];
+        cor_check [label="(status & mask) == mask", shape=diamond, fillcolor="#ffeeba"];
+    }
+    
+    subgraph can {
+        label="CAN - Check All Flags";
+        fillcolor="#f8d7da";
+        style=filled;
+        
+        can_instr [label="CAN mask", shape=box, fillcolor="#f5c6cb"];
+        can_check [label="(status & mask) == mask", shape=diamond, fillcolor="#f5c6cb"];
+    }
+    
+    subgraph jmp {
+        label="JMP - Jump";
+        fillcolor="#cce5ff";
+        style=filled;
+        
+        jmp_instr [label="JMP target", shape=box, fillcolor="#b8daff"];
+        branch_check [label="canBranch?", shape=diamond, fillcolor="#b8daff"];
+        take_jmp [label="PC = target", shape=box, fillcolor="#b8daff"];
+        skip_jmp [label="PC += 2", shape=box, fillcolor="#b8daff"];
+    }
+    
+    reset [label="Reset canBranch", shape=ellipse, style=dashed, fillcolor=lightgray];
+    
+    status -> con_check;
+    status -> cor_check;
+    status -> can_check;
+    
+    con_check -> jmp_instr [label="true", color=green];
+    cor_check -> jmp_instr [label="true", color=green];
+    can_check -> jmp_instr [label="true", color=green];
+    
+    jmp_instr -> branch_check;
+    branch_check -> take_jmp [label="true"];
+    branch_check -> skip_jmp [label="false"];
+    
+    reset -> con_instr;
+    reset -> cor_instr;
+    reset -> can_instr;
+}

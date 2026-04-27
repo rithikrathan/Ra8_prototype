@@ -1,0 +1,110 @@
+digraph SystemArchitecture {
+    rankdir=TB;
+    bgcolor=white;
+    node [shape=box, style=rounded, fontname=Arial];
+    edge [color=gray, penwidth=1.5];
+    
+    label="Figure 1: System Architecture Overview";
+    labelloc=top;
+    fontsize=18;
+    fontname=Arial Bold;
+    
+    subgraph cluster_input {
+        label="Input";
+        style=filled;
+        fillcolor=lightgray;
+        color=gray;
+        
+        node [shape=record, fillcolor="#e8f4f8"];
+        asm_files [label=".asm files"];
+    }
+    
+    subgraph cluster_assembler {
+        label="Assembler Toolchain";
+        style=filled;
+        fillcolor="#d4edda";
+        color=green;
+        
+        node [shape=box, fillcolor="#c3e6cb"];
+        lexer [label="lexer.l\n(Lexer)"];
+        parser [label="parser.y\n(Parser)"];
+        ast [label="ast.c/h\n(AST)"];
+        codegen [label="assembler.c\n(Code Gen)"];
+        
+        edge [dir=none];
+        lexer -> parser -> ast -> codegen;
+    }
+    
+    subgraph cluster_python {
+        label="Python Tools";
+        style=filled;
+        fillcolor="#fff3cd";
+        color=orange;
+        
+        node [shape=box, fillcolor="#ffeeba"];
+        py_assembler [label="assembler.py"];
+        ctrl_gen [label="generateControlSignals.py"];
+    }
+    
+    subgraph cluster_output {
+        label="Output";
+        style=filled;
+        fillcolor="#d1ecf1";
+        color=blue;
+        
+        node [shape=record, fillcolor="#d6eaf8"];
+        machine_code [label="Machine Code\n(.bin)"];
+        ctrl_signals [label="Control Signals\n(.bin)"];
+    }
+    
+    subgraph cluster_emulator {
+        label="Emulator";
+        style=filled;
+        fillcolor="#f8d7da";
+        color=red;
+        
+        node [shape=box, fillcolor="#f5c6cb"];
+        main_go [label="main.go"];
+        emulator_go [label="emulator.go"];
+    }
+    
+    subgraph cluster_verilog {
+        label="Verilog";
+        style=filled;
+        fillcolor="#e2e3e5";
+        color=gray;
+        
+        node [shape=box, fillcolor="#d6d8db"];
+        v_alu [label="alu.v"];
+        v_gprf [label="gprf.v"];
+        v_pc [label="programCounter.v"];
+        v_sp [label="stackPointer.v"];
+        v_si [label="indexRegister.v"];
+        v_di [label="indexRegister.v"];
+        v_mem [label="mainMemory.v"];
+        v_ret [label="returnRegister.v"];
+        v_pipe [label="pipeline.v"];
+    }
+    
+    subgraph cluster_logisim {
+        label="Logisim";
+        style=filled;
+        fillcolor="#cce5ff";
+        color=navy;
+        
+        node [shape=box, fillcolor="#b8daff"];
+        log_alu [label="ALU.circ"];
+        log_reg [label="Registers.circ"];
+        log_pipe [label="Pipeline.circ"];
+        log_cpu [label="Ra8.circ"];
+    }
+    
+    asm_files -> lexer;
+    asm_files -> py_assembler;
+    codegen -> machine_code;
+    codegen -> ctrl_gen;
+    py_assembler -> machine_code;
+    ctrl_gen -> ctrl_signals;
+    machine_code -> emulator_go;
+    machine_code -> v_alu;
+}

@@ -1,13 +1,45 @@
 #include "ast.h"
 #include "uthash.h"
 #include <bits/pthreadtypes.h>
-#include <stdint.h> // For portable integer types (uint32_t, uint64_t, etc.) |
-#include <stdio.h>  // fopen(), fprintf(), fclose() – the core file‑IO API |
-#include <stdlib.h> // exit(), strtol() – optional helpers (if you want error‑checked number parsing) |
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-// #include <limits.h> // (optional) for limits such as INT_MAX if you do
-// rangechecks #include <stdbool.h> // (optional) if you want a bool flag
-// insteadof int
+#define MAX_ERRORS 100
+
+typedef struct {
+  int line;
+  char message[256];
+} Error;
+
+Error errors[MAX_ERRORS];
+int errorCount = 0;
+
+void addError(int line, const char *fmt, ...) {
+  if (errorCount < MAX_ERRORS) {
+    va_list args;
+    va_start(args, fmt);
+    errors[errorCount].line = line;
+    vsnprintf(errors[errorCount].message, 255, fmt, args);
+    errors[errorCount].message[255] = '\0';
+    va_end(args);
+    errorCount++;
+  }
+}
+
+void printErrors() {
+  if (errorCount == 0)
+    return;
+  fprintf(stderr, "\n=== ASSEMBLY ERRORS ===\n");
+  for (int i = 0; i < errorCount; i++) {
+    fprintf(stderr, "line %d: %s\n", errors[i].line, errors[i].message);
+  }
+  fprintf(stderr, "=======================\n");
+}
+
+int hasErrors() { return errorCount > 0; }
 
 extern int yyparse();
 extern FILE *yyin;
@@ -117,8 +149,12 @@ void firstPass() {
     if (traversalCurr == NULL) {
       break;
     }
-    // address calculations
     if (traversalCurr->type == labelDef) {
+      struct hashMap *existing;
+      HASH_FIND_STR(symbolTable, traversalCurr->as.label.name, existing);
+      if (existing != NULL) {
+        addError(0, "Duplicate label '%s'", traversalCurr->as.label.name);
+      }
       put(traversalCurr->as.label.name, symbolAddress);
     } else if (traversalCurr->type == dataDeclaration) {
       if (traversalCurr->as.dataDeclaration.type == str) {
@@ -130,6 +166,25 @@ void firstPass() {
       putData(name, dataAddress);
       dataValues[dataValuesCount++] = value;
       dataAddress++;
+    } else if (traversalCurr->type == instruction) {
+      for (size_t i = 0; i < traversalCurr->childCount; i++) {
+        astNode *child = traversalCurr->children[i];
+        if (child->type == identifier) {
+          struct hashMap *item;
+          HASH_FIND_STR(dataTable, child->as.identifier.name, item);
+          if (item != NULL) {
+            child->as.literal.intValue = item->value;
+          } else {
+            addError(0, "Undefined variable '%s'", child->as.identifier.name);
+          }
+        } else if (child->type == labelRef) {
+          struct hashMap *item;
+          HASH_FIND_STR(symbolTable, child->as.label.name, item);
+          if (item == NULL) {
+            addError(0, "Undefined label '%s'", child->as.label.name);
+          }
+        }
+      }
     }
   }
 }
@@ -184,54 +239,22 @@ int main(int argc, char **argv) {
   }
   int result = yyparse();
   fclose(yyin);
-  if (result == 0) {
-    print_ast_json(ast_root, stdout);
-    initTraversal(ast_root);
-    astNode *node;
-    while ((node = getNextNode()) != NULL) {
-      fprintf(stderr, "node: %s", node_type_str(node->type));
-      switch (node->type) {
-      case section:
-        fprintf(stderr, " (name: %s)\n",
-                node->as.section.name ? node->as.section.name : "(nil)");
-        break;
-      case instruction:
-        fprintf(stderr, " (opcode: %s)\n",
-                node->as.instruction.opcode ? node->as.instruction.opcode
-                                            : "(nil)");
-        break;
-      case labelDef:
-      case labelRef:
-        fprintf(stderr, " (name: %s)\n",
-                node->as.label.name ? node->as.label.name : "(nil)");
-        break;
-      case reg:
-        fprintf(stderr, " (name: %s)\n",
-                node->as.reg.name ? node->as.reg.name : "(nil)");
-        break;
-      case literal:
-        fprintf(stderr, " (value: %s, intValue: %d)\n",
-                node->as.literal.value ? node->as.literal.value : "(nil)",
-                node->as.literal.intValue);
-        break;
-      case identifier:
-        fprintf(stderr, " (name: %s)\n",
-                node->as.identifier.name ? node->as.identifier.name : "(nil)");
-        break;
-      case dataDeclaration:
-        fprintf(stderr, " (type: %s)\n",
-                data_type_str(node->as.dataDeclaration.type));
-        break;
-      default:
-        fprintf(stderr, "\n");
-      }
-    }
 
-    firstPass();
-    secondPass();
-
-    printSymbolTable();
-    printDataTable();
+  if (result != 0) {
+    printErrors();
+    return result;
   }
-  return result;
+
+  firstPass();
+  printErrors();
+
+  if (hasErrors()) {
+    return 1;
+  }
+
+  print_ast_json(ast_root, stdout);
+  secondPass();
+  printSymbolTable();
+  printDataTable();
+  return 0;
 }
