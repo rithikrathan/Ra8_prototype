@@ -28,6 +28,10 @@ run: $(OUTPUT)
 tree: $(OUTPUT)
 	$(PYTHON) visualize_ast.py test.asm --text
 
+compare: $(OUTPUT)
+	./$(OUTPUT) test_vars.asm > /dev/null 2>&1
+	$(PYTHON) visualize_ast.py test_vars.asm --compare --text
+
 python:
 	(cd $(PYASM_DIR) && echo "1" | $(PYTHON) $(PYASM))
 

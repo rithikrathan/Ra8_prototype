@@ -45,14 +45,10 @@ int hasErrors() { return errorCount > 0; }
 extern int yyparse();
 extern FILE *yyin;
 extern astNode *ast_root;
-extern astNode *getNextNode();
-astNode *initTraversal(astNode *root);
 extern char *yytext;
 extern const char *node_type_str(nodeType type);
 extern const char *data_type_str(dataType type);
 
-astNode *traversalCurr;
-astNode *traversalNext;
 int symbolAddress = 0;
 int dataAddress = 0;
 int instAddress = 0;
@@ -226,70 +222,80 @@ void printInstructionTable() {
 
 // =-=-=-=-=-=[my stuffs]=-=-=-=-=-=
 
-void firstPass() {
-  initTraversal(ast_root);
-
-  dataValuesCount = 0; // used to calculate the address??
-
-  while (1) {
-    // iterate through each node int the ast
-    traversalCurr = getNextNode();
-
-    if (traversalCurr == NULL) {
-      // end the iteration if there is no children next
-      break;
+void collectLabels(astNode *node) {
+  if (!node) return;
+  if (node->type == labelDef) {
+    struct hashMap *existing;
+    HASH_FIND_STR(symbolTable, node->as.label.name, existing);
+    if (existing != NULL) {
+      addError(0, "Duplicate label '%s'", node->as.label.name);
     }
+    put(node->as.label.name, symbolAddress);
+  }
+  for (size_t i = 0; i < node->childCount; i++) {
+    collectLabels(node->children[i]);
+  }
+}
 
-    if (traversalCurr->type == labelDef) {
-      // handle label definitions
-      struct hashMap *existing;
-      HASH_FIND_STR(symbolTable, traversalCurr->as.label.name, existing);
+void resolvePass(astNode *node, astNode *parent) {
+  if (!node) return;
 
-      if (existing != NULL) {
-        addError(0, "Duplicate label '%s'", traversalCurr->as.label.name);
-      } // handlel duplicate definitions
-      // else add it to the symbol table
-      put(traversalCurr->as.label.name, symbolAddress);
-    } else if (traversalCurr->type == dataDeclaration) {
-
-      if (traversalCurr->as.dataDeclaration.type == str) {
-        continue;
-      } // skip string types in data declarations
-
-      char *name = traversalCurr->children[0]->as.identifier.name;
-      char *valStr = traversalCurr->children[1]->as.literal.value;
+  switch (node->type) {
+  case dataDeclaration:
+    if (node->as.dataDeclaration.type != str) {
+      char *name = node->children[0]->as.identifier.name;
+      char *valStr = node->children[1]->as.literal.value;
       int value = atoi(valStr);
-
       putData(name, dataAddress);
       dataValues[dataValuesCount++] = value;
       dataAddress++;
-
-    } else if (traversalCurr->type == instruction) {
-      for (size_t i = 0; i < traversalCurr->childCount; i++) {
-        astNode *child = traversalCurr->children[i];
-
-        if (child->type == identifier) {
-          struct hashMap *item;
-          HASH_FIND_STR(dataTable, child->as.identifier.name, item);
-          if (item != NULL) {
-            child->as.literal.intValue = item->value;
-            child->type = literal;
-          } else {
-            addError(0, "Undefined variable '%s'", child->as.identifier.name);
-          }
-        } else if (child->type == labelRef) {
-          struct hashMap *item;
-          HASH_FIND_STR(symbolTable, child->as.label.name, item);
-          if (item != NULL) {
-            child->as.literal.intValue = item->value;
-            child->type = literal;
-          } else {
-            addError(0, "Undefined label reference '%s'", child->as.label.name);
-          }
-        }
+    }
+    for (size_t i = 0; i < node->childCount; i++) {
+      resolvePass(node->children[i], node);
+    }
+    return;
+  case instruction:
+    for (size_t i = 0; i < node->childCount; i++) {
+      resolvePass(node->children[i], node);
+    }
+    return;
+  case identifier:
+    if (parent && parent->type == instruction) {
+      struct hashMap *item;
+      HASH_FIND_STR(dataTable, node->as.identifier.name, item);
+      if (item != NULL) {
+        node->as.literal.intValue = item->value;
+        node->type = literal;
+      } else {
+        addError(0, "Undefined variable '%s'", node->as.identifier.name);
       }
     }
+    return;
+  case labelRef:
+    if (parent && parent->type == instruction) {
+      struct hashMap *item;
+      HASH_FIND_STR(symbolTable, node->as.label.name, item);
+      if (item != NULL) {
+        node->as.literal.intValue = item->value;
+        node->type = literal;
+      } else {
+        addError(0, "Undefined label reference '%s'", node->as.label.name);
+      }
+    }
+    return;
+  default:
+    break;
   }
+
+  for (size_t i = 0; i < node->childCount; i++) {
+    resolvePass(node->children[i], node);
+  }
+}
+
+void firstPass() {
+  dataValuesCount = 0;
+  collectLabels(ast_root);
+  resolvePass(ast_root, NULL);
 }
 
 typedef struct {
@@ -298,9 +304,66 @@ typedef struct {
   int operandCount;
 } inRep;
 
-void secondPass() {
-  initTraversal(ast_root);
+void dump_dot(const char *path) {
+  FILE *f = fopen(path, "w");
+  if (!f) {
+    perror("Failed to open DOT output file");
+    return;
+  }
+  print_ast_json(ast_root, f);
+  fclose(f);
+}
 
+void emitCode(astNode *node, FILE *instFile) {
+  if (!node) return;
+
+  switch (node->type) {
+  case dataDeclaration:
+  case labelDef:
+    return;
+  case instruction: {
+    inRep inst;
+    inst.opcode = node->as.instruction.opcode;
+    inst.operandCount = 0;
+
+    for (size_t i = 0; i < node->childCount; i++) {
+      astNode *child = node->children[i];
+      if (child->type == literal) {
+        // TODO: encode literal operand
+        // child->as.literal.intValue contains the resolved address/value
+        // add encoding logic here, write to instFile
+      } else if (child->type == reg) {
+        // TODO: encode register operand
+        // child->as.reg.name contains the register name (e.g. "A", "B")
+        // map to numeric encoding and write to instFile
+      }
+    }
+
+    // TODO: write fully encoded instruction bytes to instFile
+    // currently only the opcode byte is written, operands are skipped
+    int machineCode = getMachineCode(inst.opcode);
+    if (machineCode != -1) {
+      write_value(instFile, machineCode);
+    } else {
+      addError(0, "Unknown opcode '%s'", inst.opcode);
+    }
+    instAddress++;
+
+    return;
+  }
+  case literal:
+    // orphan literal — skip (not an instruction child)
+    return;
+  default:
+    break;
+  }
+
+  for (size_t i = 0; i < node->childCount; i++) {
+    emitCode(node->children[i], instFile);
+  }
+}
+
+void secondPass() {
   FILE *dataFile = fopen("out/dataSegment.txt", "w");
   FILE *instFile = fopen("out/instSegment.txt", "w");
 
@@ -314,52 +377,7 @@ void secondPass() {
   }
 
   // == do code generation here ==
-  while (1) {
-    traversalCurr = getNextNode();
-
-    if (traversalCurr == NULL) {
-      break;
-    }
-
-    if (traversalCurr->type == labelDef) {
-      // labels are first-pass only, skip
-      continue;
-    }
-
-    if (traversalCurr->type == dataDeclaration) {
-      // data already written from dataValues[], skip
-      continue;
-    }
-
-    if (traversalCurr->type == instruction) {
-      inRep inst;
-      inst.opcode = traversalCurr->as.instruction.opcode;
-
-      int machineCode = getMachineCode(inst.opcode);
-      if (machineCode != -1) {
-        write_value(instFile, machineCode);
-      } else {
-        addError(0, "Unknown opcode '%s'", inst.opcode);
-      }
-      instAddress++;
-      int operand1 = 0;
-      int operand2 = 0;
-      int operand3 = 0;
-
-      // as.instruction.opcode => instruction name
-
-      for (size_t i = 0; i < traversalCurr->childCount; i++) {
-        astNode *child = traversalCurr->children[i];
-
-        if (child->type == literal) {
-          // something
-        } else if (child->type == reg) {
-          // some other thing
-        }
-      }
-    }
-  }
-
+  emitCode(ast_root, instFile);
   // == end generation here ==
 
   if (fclose(dataFile) != 0) {
@@ -398,7 +416,11 @@ int main(int argc, char **argv) {
 
   loadInstructionTable();
 
+  dump_dot("out/ast_pre.dot");
+
   firstPass();
+
+  dump_dot("out/ast_post.dot");
   printErrors();
 
   if (hasErrors()) {

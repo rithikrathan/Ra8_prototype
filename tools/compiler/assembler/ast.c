@@ -97,7 +97,7 @@ astNode *createNode(nodeType type, ...) {
 
   case literal:
     node->as.literal.value = va_arg(args, char *);
-    node->as.literal.intValue = va_arg(args, int);
+    node->as.literal.intValue = (int)va_arg(args, long);
     break;
 
   case identifier:
@@ -221,6 +221,7 @@ void print_node_json(astNode *node, FILE *out, int *node_id, int parent_id) {
   case literal:
     fprintf(out, "\\nvalue: %s",
             node->as.literal.value ? node->as.literal.value : "(nil)");
+    fprintf(out, "\\nintValue: %d", node->as.literal.intValue);
     break;
   case identifier:
     fprintf(out, "\\nname: %s",
