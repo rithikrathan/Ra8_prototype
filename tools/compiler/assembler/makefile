@@ -19,8 +19,8 @@ $(PARSER_OUT) $(PARSER_HDR): parser.y
 $(LEX_OUT): lexer.l
 	$(FLEX) lexer.l
 
-$(OUTPUT): assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c
-	$(CC) assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c -o $(OUTPUT)
+$(OUTPUT): assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c cJSON.c
+	$(CC) assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c cJSON.c -o $(OUTPUT)
 
 run: $(OUTPUT)
 	./$(OUTPUT) test.asm
@@ -31,7 +31,7 @@ tree: $(OUTPUT)
 python:
 	(cd $(PYASM_DIR) && echo "1" | $(PYTHON) $(PYASM))
 
-cheeky: run python
+assemble: run python
 
 clean:
 	rm -f $(LEX_OUT) $(PARSER_OUT) $(PARSER_HDR) $(OUTPUT)
