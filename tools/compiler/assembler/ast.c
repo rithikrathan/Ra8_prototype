@@ -4,63 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern FILE *yyin;
 extern astNode *ast_root;
-extern char *yytext;
-
-/* ==========================================================================
-   AI GENERATED - DFS TRAVERSAL
-   ========================================================================== */
-
-static astNode *stack[256];
-static int sp = -1;
-static astNode *curr = NULL;
-static size_t child_idx = 0;
-
-astNode *getNextNode();
-const char *node_type_str(nodeType type);
-const char *data_type_str(dataType type);
-
-void push(astNode *node) {
-  if (sp >= 255)
-    return;
-  stack[++sp] = node;
-}
-
-astNode *pop() {
-  if (sp < 0)
-    return NULL;
-  return stack[sp--];
-}
-
-int isStackEmpty() { return sp < 0; }
-
-astNode *initTraversal(astNode *root) {
-  sp = -1;
-  child_idx = 0;
-  if (root != NULL) {
-    push(root);
-  }
-  return getNextNode();
-}
-
-astNode *getNextNode() {
-  while (!isStackEmpty()) {
-    curr = pop();
-
-    if (curr == NULL)
-      continue;
-
-    for (int i = curr->childCount - 1; i >= 0; i--) {
-      if (curr->children[i] != NULL) {
-        push(curr->children[i]);
-      }
-    }
-
-    return curr;
-  }
-  return NULL;
-}
 
 /* ========================================================================== */
 
@@ -141,8 +85,6 @@ void addchild(astNode *parentNode, astNode *childNode) {
   parentNode->children[parentNode->childCount] = childNode;
   parentNode->childCount++;
 }
-
-void freeNode(astNode *node) {}
 
 const char *node_type_str(nodeType type) {
   switch (type) {
@@ -260,5 +202,3 @@ void print_ast_json(astNode *node, FILE *out) {
 
   fprintf(out, "}\n");
 }
-
-void semanticAnalysis() {}

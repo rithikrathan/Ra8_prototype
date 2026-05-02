@@ -1,7 +1,6 @@
 #include "ast.h"
 #include "cJSON.h"
 #include "uthash.h"
-#include <bits/pthreadtypes.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,6 +8,98 @@
 #include <string.h>
 
 #define MAX_ERRORS 100
+
+#define A 0
+#define B 1
+#define C 2
+#define D 3
+#define E 4
+#define F 5
+#define G 6
+#define H 7
+#define SI 8
+#define DI 9
+#define RNG 10
+#define SP 11
+#define PC 12
+#define templ 13
+#define temph 14
+
+#define HIGH_BYTE(x) (((x) >> 8) & 0xFF)
+#define LOW_BYTE(x) ((x) & 0xFF)
+#define PACK_REGS(a, b) (((b) << 4) | ((a) & 0xF))
+
+int getLiteralValue(astNode *node) {
+  if (!node || node->type != literal) return 0;
+  if (node->as.literal.value) {
+    char c = node->as.literal.value[0];
+    if (c >= '0' && c <= '9')
+      return atoi(node->as.literal.value);
+    if (c == '-' && node->as.literal.value[1] >= '0' && node->as.literal.value[1] <= '9')
+      return atoi(node->as.literal.value);
+  }
+  return node->as.literal.intValue;
+}
+
+int getInstSize(int machineCode) {
+  switch (machineCode) {
+  case 0: return 1;  // nope
+  case 1: return 1;  // hlt
+  case 12: return 2; // not
+  case 17: return 2; // iin
+  case 18: return 2; // din
+  case 19: return 2; // cmp
+  case 25: return 2; // mv
+  case 29: return 2; // sti
+  case 30: return 2; // lin
+  case 31: return 2; // sin
+  case 32: return 2; // rin
+  case 33: return 2; // rpc
+  case 34: return 2; // rsp
+  case 35: return 2; // con
+  case 36: return 2; // cor
+  case 37: return 2; // can
+  case 38: return 3; // jmp
+  case 39: return 2; // set
+  default: return 3; // most 3-operand instructions (add, adi, etc)
+  }
+}
+
+int regToNum(const char *name) {
+  if (!name)
+    return -1;
+  if (strcmp(name, "A") == 0 || strcmp(name, "a") == 0)
+    return A;
+  if (strcmp(name, "B") == 0 || strcmp(name, "b") == 0)
+    return B;
+  if (strcmp(name, "C") == 0 || strcmp(name, "c") == 0)
+    return C;
+  if (strcmp(name, "D") == 0 || strcmp(name, "d") == 0)
+    return D;
+  if (strcmp(name, "E") == 0 || strcmp(name, "e") == 0)
+    return E;
+  if (strcmp(name, "F") == 0 || strcmp(name, "f") == 0)
+    return F;
+  if (strcmp(name, "G") == 0 || strcmp(name, "g") == 0)
+    return G;
+  if (strcmp(name, "H") == 0 || strcmp(name, "h") == 0)
+    return H;
+  if (strcmp(name, "SI") == 0 || strcmp(name, "si") == 0)
+    return SI;
+  if (strcmp(name, "DI") == 0 || strcmp(name, "di") == 0)
+    return DI;
+  if (strcmp(name, "RNG") == 0 || strcmp(name, "rng") == 0)
+    return RNG;
+  if (strcmp(name, "SP") == 0 || strcmp(name, "sp") == 0)
+    return SP;
+  if (strcmp(name, "PC") == 0 || strcmp(name, "pc") == 0)
+    return PC;
+  if (strcmp(name, "templ") == 0)
+    return templ;
+  if (strcmp(name, "temph") == 0)
+    return temph;
+  return -1;
+}
 
 typedef struct {
   int line;
@@ -109,16 +200,6 @@ void printDataTable() {
   printf("------------------\n");
 }
 
-void get(const char *key_str) {
-  struct hashMap *item;
-  HASH_FIND_STR(symbolTable, key_str, item);
-  if (item != NULL) {
-    printf("Found [%s] : %d\n", item->key, item->value);
-  } else {
-    printf("[%s] not found.\n", key_str);
-  }
-}
-
 void putData(const char *key_str, int val) {
   struct hashMap *item;
   HASH_FIND_STR(dataTable, key_str, item);
@@ -129,15 +210,6 @@ void putData(const char *key_str, int val) {
     HASH_ADD_KEYPTR(hh, dataTable, item->key, strlen(item->key), item);
   } else {
     item->value = val;
-  }
-}
-
-void free_table() {
-  struct hashMap *current, *tmp;
-  HASH_ITER(hh, symbolTable, current, tmp) {
-    HASH_DEL(symbolTable, current);
-    free(current->key); // Don't forget to free the strdup'd key!
-    free(current);      // Free the struct
   }
 }
 
@@ -206,24 +278,11 @@ void loadInstructionTable() {
   cJSON_Delete(json);
 }
 
-void printInstructionTable() {
-  struct hashMap *current, *temp;
-  unsigned int count = HASH_COUNT(instructionTable);
-  printf("\n---[INSTRUCTION TABLE]---\n");
-  if (count == 0) {
-    printf("instructionTable is empty\n");
-    return;
-  }
-  HASH_ITER(hh, instructionTable, current, temp) {
-    printf("Opcode: %s \t Code: %d\n", current->key, current->value);
-  }
-  printf("-------------------------\n");
-}
-
 // =-=-=-=-=-=[my stuffs]=-=-=-=-=-=
 
 void collectLabels(astNode *node) {
-  if (!node) return;
+  if (!node)
+    return;
   if (node->type == labelDef) {
     struct hashMap *existing;
     HASH_FIND_STR(symbolTable, node->as.label.name, existing);
@@ -231,6 +290,18 @@ void collectLabels(astNode *node) {
       addError(0, "Duplicate label '%s'", node->as.label.name);
     }
     put(node->as.label.name, symbolAddress);
+    for (size_t i = 0; i < node->childCount; i++) {
+      collectLabels(node->children[i]);
+    }
+    return;
+  }
+  if (node->type == instruction) {
+    char *op = node->as.instruction.opcode;
+    int mc = getMachineCode(op);
+    if (mc >= 0) {
+      symbolAddress += getInstSize(mc);
+    }
+    return;
   }
   for (size_t i = 0; i < node->childCount; i++) {
     collectLabels(node->children[i]);
@@ -238,7 +309,8 @@ void collectLabels(astNode *node) {
 }
 
 void resolvePass(astNode *node, astNode *parent) {
-  if (!node) return;
+  if (!node)
+    return;
 
   switch (node->type) {
   case dataDeclaration:
@@ -298,12 +370,6 @@ void firstPass() {
   resolvePass(ast_root, NULL);
 }
 
-typedef struct {
-  char *opcode;
-  int operands[4];
-  int operandCount;
-} inRep;
-
 void dump_dot(const char *path) {
   FILE *f = fopen(path, "w");
   if (!f) {
@@ -314,58 +380,175 @@ void dump_dot(const char *path) {
   fclose(f);
 }
 
-void emitCode(astNode *node, FILE *instFile) {
-  if (!node) return;
+void emitCode(astNode *node, FILE *instFile, FILE *binFile) {
+  if (!node)
+    return;
 
   switch (node->type) {
   case dataDeclaration:
   case labelDef:
     return;
-  case instruction: {
-    inRep inst;
-    inst.opcode = node->as.instruction.opcode;
-    inst.operandCount = 0;
 
-    for (size_t i = 0; i < node->childCount; i++) {
-      astNode *child = node->children[i];
-      if (child->type == literal) {
-        // TODO: encode literal operand
-        // child->as.literal.intValue contains the resolved address/value
-        // add encoding logic here, write to instFile
-      } else if (child->type == reg) {
-        // TODO: encode register operand
-        // child->as.reg.name contains the register name (e.g. "A", "B")
-        // map to numeric encoding and write to instFile
+  case instruction: {
+    char *op = node->as.instruction.opcode;
+    int machineCode = getMachineCode(op);
+    if (machineCode == -1) {
+      addError(0, "Unknown opcode '%s'", op);
+      return;
+    }
+
+    astNode *op1 = node->childCount > 0 ? node->children[0] : NULL;
+    astNode *op2 = node->childCount > 1 ? node->children[1] : NULL;
+    astNode *op3 = node->childCount > 2 ? node->children[2] : NULL;
+
+    int r1 = (op1 && op1->type == reg) ? regToNum(op1->as.reg.name) : 0;
+    int r2 = (op2 && op2->type == reg) ? regToNum(op2->as.reg.name) : 0;
+    int i1 = (op1 && op1->type == literal) ? getLiteralValue(op1) : 0;
+    int i2 = (op2 && op2->type == literal) ? getLiteralValue(op2) : 0;
+    int i3 = (op3 && op3->type == literal) ? getLiteralValue(op3) : 0;
+
+    unsigned char bytes[64];
+    int byteCount = 0;
+    bytes[byteCount++] = (unsigned char)machineCode;
+
+    switch (machineCode) {
+    case 0: // nope
+    case 1: // hlt
+      break;
+
+    case 2: // add regRes, regA, regB
+    case 4: // addc regRes, regA, regB
+    case 5: // sub regRes, regA, regB
+    case 7: // subb regRes, regA, regB
+    case 8: // and regRes, regA, regB
+    case 10: // or regRes, regA, regB
+    case 13: // xor regRes, regA, regB
+    case 15: // xnr regRes, regA, regB
+    case 20: // rs regRes, regA, regB
+    case 21: // ls regRes, regA, regB
+    case 22: // rr regRes, regA, regB
+    case 23: // lr regRes, regA, regB
+    case 24: // ars regRes, regA, regB
+      bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      break;
+
+    case 3: // adi regRes, regA, imm
+    case 6: // sui regRes, regA, imm
+    case 9: // ani regRes, regA, imm
+    case 11: // ori regRes, regA, imm
+    case 14: // xri regRes, regA, imm
+    case 16: // xni regRes, regA, imm
+      bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      bytes[byteCount++] = (unsigned char)(i3 & 0xFF);
+      break;
+
+    case 12: // not regRes, regA
+      bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      break;
+
+    case 17: // iin si/di
+    case 18: // din si/di
+      bytes[byteCount++] = (unsigned char)(r1 & 0xF);
+      break;
+
+    case 19: // cmp regA, regB
+      bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      break;
+
+    case 25: // mv regA, regB
+    case 32: // rin regA, regB
+    case 33: // rpc regA, regB
+    case 34: // rsp regA, regB
+      bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      break;
+
+    case 26: // ld regA, addr
+      bytes[byteCount++] = (unsigned char)(r1 & 0xF);
+      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i2);
+      bytes[byteCount++] = (unsigned char)LOW_BYTE(i2);
+      break;
+
+    case 27: // ldi regA, imm
+      bytes[byteCount++] = (unsigned char)(i2 & 0xFF);
+      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i3);
+      bytes[byteCount++] = (unsigned char)LOW_BYTE(i3);
+      break;
+
+    case 28: // st addr, reg
+      bytes[byteCount++] = (unsigned char)(r2 & 0xF);
+      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i1);
+      bytes[byteCount++] = (unsigned char)LOW_BYTE(i1);
+      break;
+
+    case 29: // sti addr, imm
+      bytes[byteCount++] = (unsigned char)(i2 & 0xFF);
+      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i1);
+      bytes[byteCount++] = (unsigned char)LOW_BYTE(i1);
+      break;
+
+    case 30: // lin regsi/di, imm16
+      bytes[byteCount++] = (unsigned char)(r1 & 0xF);
+      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i2);
+      bytes[byteCount++] = (unsigned char)LOW_BYTE(i2);
+      break;
+
+    case 31: // sin
+      bytes[byteCount++] = (unsigned char)(r1 & 0xF);
+      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i2);
+      bytes[byteCount++] = (unsigned char)LOW_BYTE(i2);
+      break;
+
+    case 35: // con <flag bit number>
+      bytes[byteCount++] = (unsigned char)(i1 & 0xFF);
+      break;
+
+    case 36: // cor <8 bit mask>
+      bytes[byteCount++] = (unsigned char)(i1 & 0xFF);
+      break;
+
+    case 37: // can <8 bit mask>
+      bytes[byteCount++] = (unsigned char)(i1 & 0xFF);
+      break;
+
+    case 38: // jmp addr
+      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i1);
+      bytes[byteCount++] = (unsigned char)LOW_BYTE(i1);
+      break;
+
+    case 39: // set <8 bit mask>
+      bytes[byteCount++] = (unsigned char)(i1 & 0xFF);
+      break;
+
+    default:
+      break;
+    }
+
+    for (int i = 0; i < byteCount; i++) {
+      write_value(instFile, bytes[i]);
+      if (binFile) {
+        fputc(bytes[i], binFile);
       }
     }
 
-    // TODO: write fully encoded instruction bytes to instFile
-    // currently only the opcode byte is written, operands are skipped
-    int machineCode = getMachineCode(inst.opcode);
-    if (machineCode != -1) {
-      write_value(instFile, machineCode);
-    } else {
-      addError(0, "Unknown opcode '%s'", inst.opcode);
-    }
-    instAddress++;
-
+    instAddress += getInstSize(machineCode);
     return;
   }
   case literal:
-    // orphan literal — skip (not an instruction child)
     return;
+
   default:
     break;
   }
 
   for (size_t i = 0; i < node->childCount; i++) {
-    emitCode(node->children[i], instFile);
+    emitCode(node->children[i], instFile, binFile);
   }
 }
 
 void secondPass() {
   FILE *dataFile = fopen("out/dataSegment.txt", "w");
   FILE *instFile = fopen("out/instSegment.txt", "w");
+  FILE *binFile = fopen("out/program.bin", "wb");
 
   if (dataFile == NULL || instFile == NULL) {
     perror("fopen");
@@ -377,7 +560,7 @@ void secondPass() {
   }
 
   // == do code generation here ==
-  emitCode(ast_root, instFile);
+  emitCode(ast_root, instFile, binFile);
   // == end generation here ==
 
   if (fclose(dataFile) != 0) {
@@ -390,9 +573,16 @@ void secondPass() {
     perror("fclose");
     exit(EXIT_FAILURE);
   }
-
   printf("File '%s' instructionFile written successfully.\n",
          "instSegment.txt");
+
+  if (binFile) {
+    if (fclose(binFile) != 0) {
+      perror("fclose");
+      exit(EXIT_FAILURE);
+    }
+    printf("File 'program.bin' written successfully.\n");
+  }
 }
 
 int main(int argc, char **argv) {
