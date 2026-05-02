@@ -7,3 +7,13 @@ parser.tab.h
 *.png
 *.pdf
 *.svg
+*.bak
+out/
+data.bin
+program.bin
+python/
+Control_signals/
+Machine_code/
+csv_to_json.py
+helperScripts/
+visualize_ast.py

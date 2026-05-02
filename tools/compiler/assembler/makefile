@@ -7,10 +7,6 @@ PARSER_HDR = parser.tab.h
 LEX_OUT = lex.yy.c
 OUTPUT = assembler
 
-PYTHON = python3
-PYASM_DIR = python
-PYASM = assembler.py
-
 all: $(OUTPUT)
 
 $(PARSER_OUT) $(PARSER_HDR): parser.y
@@ -25,19 +21,12 @@ $(OUTPUT): assembler.c $(LEX_OUT) $(PARSER_OUT) ast.c cJSON.c
 run: $(OUTPUT)
 	./$(OUTPUT) test.asm
 
-tree: $(OUTPUT)
-	$(PYTHON) visualize_ast.py test.asm --text
-
-compare: $(OUTPUT)
-	./$(OUTPUT) test_vars.asm > /dev/null 2>&1
-	$(PYTHON) visualize_ast.py test_vars.asm --compare --text
-
-python:
-	(cd $(PYASM_DIR) && echo "1" | $(PYTHON) $(PYASM))
-
-assemble: run python
+test: $(OUTPUT)
+	mkdir -p out
+	python3 tests/test_basic.py && python3 tests/test_extended.py && python3 tests/test_block.py
 
 clean:
 	rm -f $(LEX_OUT) $(PARSER_OUT) $(PARSER_HDR) $(OUTPUT)
+	rm -rf out/
 
-.PHONY: all run tree python cheeky clean
+.PHONY: all run test clean
