@@ -1,17 +1,16 @@
 ; normal comment
 ; another normal comment
 [__data__]
-    int8 test  = 1 ; an inline commnet
-    int8 test1 = 3
-    int8 test2 = 5
-    int8 test3 = 7
-    int8 test4 = 11
-    int8 test5 = 13
+    int8 test   = 1 ; an inline commnet
+    int8 test1  = 3
+    int8 test2  = 5
+    int16 hallo = 7
+    int8 test4  = 11
+    int8 test5  = 13
 end
 
 [__inst__]
-$START:
-    ; load the values into the registers
+$START: ; load the values into the registers
     LD A, 0
     LD B, 2
     LD C, 2

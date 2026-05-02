@@ -31,11 +31,11 @@ int isValid(const char *str) {
         "nope", "hlt", "add", "adi", "addc", "sub", "sui", "subb", "and", "ani",
         "or", "ori", "not", "xor", "xri", "xnr", "xni", "iin", "din", "cmp", "rs",
         "ls", "rr", "lr", "ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin", "rin",
-        "rpc", "rsp", "con", "cor", "can", "jmp", "set",
+        "rpc", "rsp", "con", "cor", "can", "jmp", "set", "lsx", "ldx", "ssx", "sdx",
         "NOPE", "HLT", "ADD", "ADI", "ADDC", "SUB", "SUI", "SUBB", "AND", "ANI",
         "OR", "ORI", "NOT", "XOR", "XRI", "XNR", "XNI", "IIN", "DIN", "CMP", "RS",
         "LS", "RR", "LR", "ARS", "MV", "LD", "LDI", "ST", "STI", "LIN", "SIN", "RIN",
-        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET", NULL
+        "RPC", "RSP", "CON", "COR", "CAN", "JMP", "SET", "LSX", "LDX", "SSX", "SDX", NULL
     };
 
     for (int i = 0; ignoreList[i] != NULL; i++) {
@@ -182,9 +182,9 @@ data_declaration:
     ;
 
 data_value:
-    NUM { $$ = createNode(literal, strdup(yytext), (int)$1); }
-    | BIN { $$ = createNode(literal, strdup(yytext), (int)$1); }
-    | HEX { $$ = createNode(literal, strdup(yytext), (int)$1); }
+    NUM { $$ = createNode(literal, strdup(yytext), (long)$1); }
+    | BIN { $$ = createNode(literal, strdup(yytext), (long)$1); }
+    | HEX { $$ = createNode(literal, strdup(yytext), (long)$1); }
     | STRING_LITERAL { $$ = createNode(literal, $1, 0); }
     | IDENTIFIER { $$ = createNode(literal, $1, 0); }
     ;

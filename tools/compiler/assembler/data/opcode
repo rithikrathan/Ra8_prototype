@@ -1,0 +1,1694 @@
+[
+  {
+    "size": "[",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"nope\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"0\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"no operation\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"hlt\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"halt\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"add\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"addition\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"adi\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"add immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"addc\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"4\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"add with carry\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"sub\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"5\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"subtraction\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"sui\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"6\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"subtract immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"subb\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"7\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"subtract with borrow\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"and\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"8\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"and\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"ani\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"9\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"and immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"or\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"10\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"or\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"ori\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"11\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"or immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"not\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"12\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"not\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"xor\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"13\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"xor\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"xri\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"14\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"xor immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"xnr\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"15\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"xnor\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"xni\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"16\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"xnor immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"iin\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"17\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"increment index\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"din\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"18\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"decrement index\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"cmp\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"19\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"compare\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"rs\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"20\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"right shift\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"ls\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"21\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"left shift\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"rr\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"22\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"right rotate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"lr\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"23\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"left rotate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"ars\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"24\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"arithmetic right rotate/shift\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"mv\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"25\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"move register values\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"ld\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"4\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"26\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"load from memory\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"ldi\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"4\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"27\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"load immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"st\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"4\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"28\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"store to memory\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"sti\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"29\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"store immediate\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"lin\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"30\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"load index register 16 bit SI/DI indirect\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"sin\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"31\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"store index register 16 bit SI/DI indirect\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"rin\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"3\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"32\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"load [Rh|Rl] pair to index reg\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"rpc\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"33\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"register pair to PC\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"rsp\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"34\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"register pair to SP\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"con\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"35\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"check single flag including 0 for no condition\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"cor\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"36\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"check if any (input - flag mask)\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"can\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"37\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"check if all (input - flag mask)\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"jmp\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"1\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"38\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"jump\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "{",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"opcode\": \"set\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"size\": \"2\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"machineCode\": \"39\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"comment\": \"set flag\"",
+    "machineCode": "",
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "\"operandCount\": \"\"",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "}",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  },
+  {
+    "size": "]",
+    "machineCode": null,
+    "comment": null,
+    "operandCount": null
+  }
+]

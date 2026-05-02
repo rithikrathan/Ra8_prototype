@@ -45,15 +45,37 @@ int getInstSize(int machineCode) {
   switch (machineCode) {
   case 0: return 1;  // nope
   case 1: return 1;  // hlt
+  case 2: return 3;  // add
+  case 3: return 3;  // adi
+  case 4: return 3;  // addc
+  case 5: return 3;  // sub
+  case 6: return 3;  // sui
+  case 7: return 3;  // subb
+  case 8: return 3;  // and
+  case 9: return 3;  // ani
+  case 10: return 3; // or
+  case 11: return 3; // ori
   case 12: return 2; // not
+  case 13: return 3; // xor
+  case 14: return 3; // xri
+  case 15: return 3; // xnr
+  case 16: return 3; // xni
   case 17: return 2; // iin
   case 18: return 2; // din
   case 19: return 2; // cmp
+  case 20: return 3; // rs
+  case 21: return 3; // ls
+  case 22: return 3; // rr
+  case 23: return 3; // lr
+  case 24: return 3; // ars
   case 25: return 2; // mv
-  case 29: return 2; // sti
-  case 30: return 2; // lin
-  case 31: return 2; // sin
-  case 32: return 2; // rin
+  case 26: return 4; // ld
+  case 27: return 3; // ldi
+  case 28: return 4; // st
+  case 29: return 4; // sti
+  case 30: return 4; // lin
+  case 31: return 4; // sin
+  case 32: return 3; // rin
   case 33: return 2; // rpc
   case 34: return 2; // rsp
   case 35: return 2; // con
@@ -61,7 +83,11 @@ int getInstSize(int machineCode) {
   case 37: return 2; // can
   case 38: return 3; // jmp
   case 39: return 2; // set
-  default: return 3; // most 3-operand instructions (add, adi, etc)
+  case 40: return 2; // lsx
+  case 41: return 2; // ldx
+  case 42: return 2; // ssx
+  case 43: return 2; // sdx
+  default: return 1;
   }
 }
 
@@ -403,6 +429,7 @@ void emitCode(astNode *node, FILE *instFile, FILE *binFile) {
 
     int r1 = (op1 && op1->type == reg) ? regToNum(op1->as.reg.name) : 0;
     int r2 = (op2 && op2->type == reg) ? regToNum(op2->as.reg.name) : 0;
+    int r3 = (op3 && op3->type == reg) ? regToNum(op3->as.reg.name) : 0;
     int i1 = (op1 && op1->type == literal) ? getLiteralValue(op1) : 0;
     int i2 = (op2 && op2->type == literal) ? getLiteralValue(op2) : 0;
     int i3 = (op3 && op3->type == literal) ? getLiteralValue(op3) : 0;
@@ -429,7 +456,8 @@ void emitCode(astNode *node, FILE *instFile, FILE *binFile) {
     case 22: // rr regRes, regA, regB
     case 23: // lr regRes, regA, regB
     case 24: // ars regRes, regA, regB
-      bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      bytes[byteCount++] = (unsigned char)PACK_REGS(r2, r3); // (regB<<4)|regA
+      bytes[byteCount++] = (unsigned char)(r1 & 0xF);        // regRes
       break;
 
     case 3: // adi regRes, regA, imm
@@ -456,10 +484,14 @@ void emitCode(astNode *node, FILE *instFile, FILE *binFile) {
       break;
 
     case 25: // mv regA, regB
-    case 32: // rin regA, regB
     case 33: // rpc regA, regB
     case 34: // rsp regA, regB
       bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      break;
+
+    case 32: // rin regA, regB, targetIdx => SI/DI = regA | (regB << 8)
+      bytes[byteCount++] = (unsigned char)PACK_REGS(r1, r2);
+      bytes[byteCount++] = (unsigned char)(r3 & 0xF);
       break;
 
     case 26: // ld regA, addr
@@ -469,9 +501,8 @@ void emitCode(astNode *node, FILE *instFile, FILE *binFile) {
       break;
 
     case 27: // ldi regA, imm
+      bytes[byteCount++] = (unsigned char)(r1 & 0xF);
       bytes[byteCount++] = (unsigned char)(i2 & 0xFF);
-      bytes[byteCount++] = (unsigned char)HIGH_BYTE(i3);
-      bytes[byteCount++] = (unsigned char)LOW_BYTE(i3);
       break;
 
     case 28: // st addr, reg
@@ -481,9 +512,9 @@ void emitCode(astNode *node, FILE *instFile, FILE *binFile) {
       break;
 
     case 29: // sti addr, imm
-      bytes[byteCount++] = (unsigned char)(i2 & 0xFF);
       bytes[byteCount++] = (unsigned char)HIGH_BYTE(i1);
       bytes[byteCount++] = (unsigned char)LOW_BYTE(i1);
+      bytes[byteCount++] = (unsigned char)(i2 & 0xFF);
       break;
 
     case 30: // lin regsi/di, imm16
@@ -517,6 +548,13 @@ void emitCode(astNode *node, FILE *instFile, FILE *binFile) {
 
     case 39: // set <8 bit mask>
       bytes[byteCount++] = (unsigned char)(i1 & 0xFF);
+      break;
+
+    case 40: // lsx regA  => regA = dataMem[SI]
+    case 41: // ldx regA  => regA = dataMem[DI]
+    case 42: // ssx regA  => dataMem[SI] = regA
+    case 43: // sdx regA  => dataMem[DI] = regA
+      bytes[byteCount++] = (unsigned char)(r1 & 0xF);
       break;
 
     default:

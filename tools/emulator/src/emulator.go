@@ -1,842 +1,743 @@
-// FUCK CANCER
-// i dont know golang, there may be a lot of optimisations can be dont but im not gonna do that
-// also im too lazy to implemnt instructions that happen in multiple stages so i broken them down
-//
-//	individual instructions, and have this abstraction where we use macros as instructions and the
-//
-// code is assembled int these individual instructions, ik im too lazy to implemnt that in hardware
-// that is a bit faster when executing, meh we are not trying to make a computers to solve computation
-// probems are we?? thats rhetorical no im not
 package main
 
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
-// =-=-=-=-=-=-=[GLOBAL VARIABLES]=-=-=-=-=-=-
-var registerCount = 13
-
-// =-=-=-=-=-=-=[DEFINE NECESSARY THINGS]=-=-=-=-=-=-
-// flags struct
-type Flags uint8
-
-const (
-	// [S|-|OV|C|AC|-|P|Z]
-	// wait is the flags set to 1 when it is initialised?
-	Zero      Flags = 1 << iota // bit 0 == Zero flag
-	Parity                      // bit 1
-	Halted                      // bit 2
-	AuxCarry                    // bit 3
-	Carry                       // bit 4
-	Overflow                    // bit 5
-	reserved2                   // bit 6
-	Sign                        // bit 7
-)
-
-func HandleFlags(f *Flags, a, b, result byte) {
-	*f = 0 // Reset flags to 0 before calculating new state
-	if result == 0 {
-		*f |= Zero
-	} // Zero Flag (Z): Result is 0
-
-	if result&0x80 != 0 {
-		*f |= Sign
-	} // Sign Flag (S): Bit 7 is set (negative in two's complement)
-
-	if uint16(a)+uint16(b) > 0xFF {
-		*f |= Carry
-	} // Carry Flag (C): Unsigned overflow (sum > 255)
-
-	if (a&0x0F)+(b&0x0F) > 0x0F {
-		*f |= AuxCarry
-	} // Auxiliary Carry (AC): Carry from bit 3 to bit 4 (nibble carry)
-
-	p := result
-	p ^= p >> 4
-	p ^= p >> 2
-	p ^= p >> 1
-	if (p & 1) == 0 {
-		*f |= Parity
-	} // Parity Flag (P): Set if the number of set bits is even
-
-	// Logic: If both inputs have the same sign, but the result has a different sign
-	if ((a ^ result) & (b ^ result) & 0x80) != 0 {
-		*f |= Overflow
-	} // Overflow Flag (OV): Signed overflow
+type CPU struct {
+	regs       [13]byte
+	pc         uint16
+	sp         uint16
+	si         uint16
+	di         uint16
+	flags      byte
+	halted     bool
+	canBranch  bool
+	instMem    []byte
+	dataMem    []byte
+	trace      bool
+	stepCount  int
+	maxSteps   int
 }
 
-func (f Flags) GetFlag(index int) bool {
-	return (f & (1 << index)) != 0
-}
-
-func (f *Flags) SetFlag(index int, value bool) {
-	if value {
-		*f |= (1 << index)
-	} else {
-		*f &^= (1 << index)
+func NewCPU() *CPU {
+	return &CPU{
+		sp:        0xFFFF,
+		canBranch: true,
+		dataMem:   make([]byte, 65536),
 	}
 }
 
-func (s Flags) String() string {
-	if s == 0 {
-		return "None"
-	}
-
-	var names []string
-
-	if s&Zero != 0 {
-		names = append(names, "Zero")
-	}
-	if s&Parity != 0 {
-		names = append(names, "Parity")
-	}
-	if s&Halted != 0 {
-		names = append(names, "Halted")
-	}
-	if s&AuxCarry != 0 {
-		names = append(names, "AuxCarry")
-	}
-	if s&Carry != 0 {
-		names = append(names, "Carry")
-	}
-	if s&Overflow != 0 {
-		names = append(names, "Overflow")
-	}
-	if s&reserved2 != 0 {
-		names = append(names, "reserved2")
-	}
-	if s&Sign != 0 {
-		names = append(names, "Sign")
-	}
-
-	return strings.Join(names, "|")
-}
-
-// =-=-=-=-=-=-=[INITIALIZE]=-=-=-=-=-=-
-
-// OpData holds the decoded operands to avoid map[string]interface{}
-type OpData struct {
-	A    byte   // Register Index A
-	B    byte   // Register Index B
-	Res  byte   // Result Register Index
-	Imm  byte   // Immediate Value
-	Addr uint16 // Address
-}
-
-// main processor struct
-type Ra8 struct {
-	// General purpose registers
-	A byte `json:"regA"` // index: 0
-	B byte `json:"regB"` // index: 1
-	C byte `json:"regC"` // index: 2
-	D byte `json:"regD"` // index: 3
-	E byte `json:"regE"` // index: 4
-	F byte `json:"regF"` // index: 5
-	G byte `json:"regG"` // index: 6
-	H byte `json:"regH"` // index: 7
-
-	Templ byte `json:"tl"`  // index: 8
-	Temph byte `json:"th"`  // index: 9
-	Rng   byte `json:"rng"` // index: 10
-
-	//NOTE: temph and templ are multiplexers that feed high and low bytes
-	//        of pc to databus used in place of registers
-	//        edit: me from the future no thise are special registers now that work just like
-	//        regular rgisters but cannot be used to perfom ALU operations, also output to address bus collectively
-
-	// Special purpose registers
-	ProgramCounter   uint16 `json:"program_counter"`
-	StackPointer     uint16 `json:"stack_pointer"`
-	SourceIndex      uint16 `json:"source_index"`
-	DestinationIndex uint16 `json:"destination_index"`
-	ReturnRegister   uint16 `json:"return_register"`
-	StatusWord       Flags  `json:"status_word"`
-
-	// Memory arrays
-	InstructionMemory [0xffff]byte `json:"instruction_memory"`
-	DataMemory        [0xffff]byte `json:"data_memory"`
-
-	// Pipeline registers
-	InstructionRegister byte `json:"instruction_register"`
-	PipelineReg1        byte `json:"pipeline_reg_1"`
-	PipelineReg2        byte `json:"pipeline_reg_2"`
-	PipelineReg3        byte `json:"pipeline_reg_3"`
-
-	// processor status
-	opcode      int  // internal field for decoded opcode
-	isHalted    bool // internal field for decoded opcode
-	isBranching bool // internal field for branch instruction flag
-	canBranch   bool // internal field for branch instruction flag
-}
-
-// some kind of constructor or something that initializes it
-func NewRa8() Ra8 {
-	return Ra8{
-		StackPointer: 0xFFFF, // Stack starts at top of memory
-	}
-}
-
-// =-=-=-=-=-=-=[EXECUTION CYCLE]=-=-=-=-=-=-
-
-// NOTE: in this single step method, the fetch decode and execute cycle programs here do not implement
-// their movement in the pipeline, as ILP is only necessary when implementing in
-// hardware and im lazy to implement in the emulator, its useless anyways
-func (p *Ra8) Step() int {
-	//composition of a single execution cycle
-	// Fixed syntax: Check if Halted bit is NOT set
-	if p.StatusWord&Halted == 0 {
-		p.Fetch()
-		p.Decode()
-		p.Execute()
-		return 0 // Running
-	} else {
-		return 1 // satus code to check if the processor halted
-	}
-}
-
-// idk bro
-func (p *Ra8) Run() int {
-	for {
-		if !p.isHalted {
-			p.Step()
-		} else {
-			fmt.Println("Exiting the main loop, execution halted!")
-			break
-		}
-	}
-	return 1
-}
-
-// make sure you do the ProgramCounter increment
-func (p *Ra8) Fetch() {
-	p.InstructionRegister = p.InstructionMemory[p.ProgramCounter]
-	p.ProgramCounter += 1
-}
-
-func (p *Ra8) Decode() {
-	// 11000000 - mask to get the number of immediate bytes
-	// 00000001 - mask to check if the instruction is a branching type
-	// 00111110 - mask get the opcode
-
-	numImm := p.InstructionRegister & 0b11000000              // Extract bits 7-6
-	p.opcode = int(p.InstructionRegister & 0b00011111)        // Extract bits 5-1 (OPCODE)
-	p.isBranching = (p.InstructionRegister & 0b00100000) != 0 // see if its a branching instruction (Fixed mask to bit 5)
-
-	//TODO: refactor this hardcoded thing if you want to
-	switch numImm >> 6 { // Shifted to match 0, 1, 2, 3 cases
-	case 0:
-		// do nothing
-
-	case 1:
-		p.PipelineReg1 = p.InstructionMemory[p.ProgramCounter]
-		p.ProgramCounter++
-
-	case 2:
-		p.PipelineReg1 = p.InstructionMemory[p.ProgramCounter]
-		p.PipelineReg2 = p.InstructionMemory[p.ProgramCounter+1]
-		p.ProgramCounter += 2
-
-	case 3:
-		p.PipelineReg1 = p.InstructionMemory[p.ProgramCounter]
-		p.PipelineReg2 = p.InstructionMemory[p.ProgramCounter+1]
-		p.PipelineReg3 = p.InstructionMemory[p.ProgramCounter+2]
-		p.ProgramCounter += 3
-
-	default:
-		// Shifted mask handles this, but keep print just in case
-		fmt.Println("owned by skill issue; invalid number of immediate bytes")
-	}
-}
-
-// TODO: make a proper instruction set table and proceed
-//  instructions that i skipped from implementing:
-// 		lin, sin, lnr{instructions to load index register using a register pair}
-//      str, ldr??
-
-func (p *Ra8) Execute() {
-
-	//WARN: the 16 bit values stored in 2 registers right??  i still dont know if i
-	//followed little endian or big endian format i believe i didnt do any thing that creates conflicts in this so this is probably fine, but just a reminder to myself to check this when
-	//i implement the instructions that use 16 bit values, also add comments on how the 16 bit values are stored in registers and memory (little endian or big endian)
-
-	// Switch is cleaner than if-else chain
-	switch p.opcode {
-	// CONTROL INSTRUCTIONS
-	case 0:
-		// NOPE instruction
-
-	case 1:
-		// HALT instruction
-		p.isHalted = true
-		p.StatusWord |= Halted
-
-	// ARITHMETIC INSTRUCTIONS
-	case 2:
-		// ADD instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val + b_val
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, b_val, result)
-
-	case 3:
-		// ADI instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := a_val + imm_val
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, imm_val, result)
-
-	case 4:
-		// ADC instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val + b_val + 1
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, b_val, result)
-
-	case 5:
-		// SUB instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val - b_val
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, b_val, result)
-
-	case 6:
-		// SUI instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := a_val - imm_val
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, imm_val, result)
-
-	case 7:
-		// SBB instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val - b_val - 1
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, b_val, result)
-
-		// NOTE: should I instead use subroutines for mul and div instructions??? idk
-	case 8:
-		// MUL instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := (uint16(a_val) * uint16(b_val)) & 0x00ff
-		p.SetRegVal(operands.Res, byte(result))
-		HandleFlags(&p.StatusWord, a_val, b_val, byte(result))
-
-	case 9:
-		// MUH instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := (uint16(a_val) * uint16(b_val)) & 0xff00
-		p.SetRegVal(operands.Res, byte(result>>8))
-		HandleFlags(&p.StatusWord, a_val, b_val, byte(result>>8))
-
-	case 10:
-		// MIL instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := (uint16(a_val) * uint16(imm_val)) & 0x00ff
-		p.SetRegVal(operands.Res, byte(result))
-		HandleFlags(&p.StatusWord, a_val, imm_val, byte(result))
-
-	case 11:
-		// MIH instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := (uint16(a_val) * uint16(imm_val)) & 0xff
-		p.SetRegVal(operands.Res, byte(result))
-		HandleFlags(&p.StatusWord, a_val, imm_val, byte(result))
-
-	case 12:
-		// DIV instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		if b_val != 0 {
-			result := (a_val / b_val) & 0xff
-			p.SetRegVal(operands.Res, result)
-			HandleFlags(&p.StatusWord, a_val, b_val, result)
-		}
-
-	case 13:
-		// DII instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		if imm_val != 0 {
-			result := (uint16(a_val) / uint16(imm_val)) & 0xff00
-			p.SetRegVal(operands.Res, byte(result>>8))
-			HandleFlags(&p.StatusWord, a_val, imm_val, byte(result>>8))
-		}
-
-	case 14:
-		// REM instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		if b_val != 0 {
-			result := (a_val % b_val) & 0xff
-			p.SetRegVal(operands.Res, result)
-			HandleFlags(&p.StatusWord, a_val, b_val, result)
-		}
-
-	case 15:
-		// REI instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		if imm_val != 0 {
-			result := (a_val % imm_val) & 0xff
-			p.SetRegVal(operands.Res, result)
-			HandleFlags(&p.StatusWord, a_val, imm_val, result)
-		}
-
-	// LOGICAL INSTRUCTIONS
-	case 16:
-		// AND instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val & b_val
-		p.SetRegVal(operands.Res, result)
-
-	case 17:
-		// ANI instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := a_val & imm_val
-		p.SetRegVal(operands.Res, result)
-
-	case 18:
-		// OR instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val | b_val
-		p.SetRegVal(operands.Res, result)
-
-	case 19:
-		// ORI instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := a_val | imm_val
-		p.SetRegVal(operands.Res, result)
-
-	case 20:
-		// NOT instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := ^a_val
-		p.SetRegVal(operands.Res, result)
-
-	case 21:
-		// NOI instruction
-		operands := p.getOperands(4)
-		imm_val := operands.Imm
-		result := ^imm_val
-		p.SetRegVal(operands.Res, result)
-
-	case 22:
-		// XOR instruction
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val ^ b_val
-		p.SetRegVal(operands.Res, result)
-
-	case 23:
-		// XRI instruction
-		operands := p.getOperands(2)
-		a_val := p.GetRegVal(operands.A)
-		imm_val := operands.Imm
-		result := a_val ^ imm_val
-		p.SetRegVal(operands.Res, result)
-
-	// BITWISE INSTRUCTIONS
-	case 24:
-		// RS instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := a_val >> 1
-		p.SetRegVal(operands.Res, result)
-
-	case 25:
-		// LS instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := a_val << 1
-		p.SetRegVal(operands.Res, result)
-
-	case 26:
-		// RR instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := ((a_val >> 1) | (a_val << 7)) & 0xff
-		p.SetRegVal(operands.Res, result)
-
-	case 27:
-		// LR instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := ((a_val << 1) | (a_val >> 7)) & 0xff
-		p.SetRegVal(operands.Res, result)
-
-	case 28:
-		// ARS instruction
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		msb := a_val & 0x80
-		lower7bits := a_val & 0x7f
-		val := (lower7bits >> 1) & 0x7f
-		result := msb | val
-		p.SetRegVal(operands.Res, result)
-
-	// MEM INSTRUCTIONS
-	case 29:
-		// MV instruction A <= B
-		operands := p.getOperands(5)
-		p.SetRegVal(operands.B, p.GetRegVal(operands.A))
-
-	case 30:
-		// LD instruction A <= Value in memory location
-		operands := p.getOperands(6)
-		p.SetRegVal(operands.A, p.DataMemory[operands.Addr])
-
-	case 31:
-		// LDI instruction A <= Immediate value
-		operands := p.getOperands(2)
-		p.SetRegVal(operands.Res, operands.Imm)
-
-	case 32:
-		// ST instruction: memory location <= Value in register A
-		operands := p.getOperands(7)
-		p.DataMemory[operands.Addr] = p.GetRegVal(operands.A)
-
-	case 33:
-		// STI instruction: memory location <= Immediate value
-		operands := p.getOperands(7)
-		p.DataMemory[operands.Addr] = operands.Imm
-
-	case 34:
-		// IIN  instruction: increment index
-		operands := p.getOperands(8)
-		switch operands.A {
-		case 1:
-			p.SourceIndex++
-		case 2:
-			p.DestinationIndex++
-		}
-
-	case 35:
-		// DIN  instruction: decrement index
-		operands := p.getOperands(8)
-		switch operands.A {
-		case 1:
-			p.SourceIndex--
-		case 2:
-			p.DestinationIndex--
-		}
-
-	// BRANCHING INSTRUCTIONS
-	// condition check
-	case 36:
-		// CON  instruction: basic Branch if, condition check
-		operands := p.getOperands(8)
-		if p.StatusWord.GetFlag(int(operands.A)) {
-			p.canBranch = true
-		}
-
-	case 37:
-		// COR  instruction: Branch if any, condition check
-		operands := p.getOperands(8)
-		if (byte(p.StatusWord) & operands.A) == operands.A {
-			p.canBranch = true
-		}
-
-	case 38:
-		// CAN  instruction: Branch if all, condition check
-		operands := p.getOperands(8)
-		if (byte(p.StatusWord) & operands.A) == operands.A {
-			p.canBranch = true
-		}
-
-	// branching
-	case 39:
-		// JMP  instruction: jump to addr, condition check
-		operands := p.getOperands(8)
-		if !p.canBranch {
-			p.ProgramCounter = operands.Addr
-		}
-
-	// STACK OPERATIONS
-	case 40:
-		// PUSH  instruction: Branch if all, condition check
-		operands := p.getOperands(8)
-		p.Stack_Push(p.GetRegVal(operands.A))
-
-	case 41:
-		// POP  instruction: Branch if all, condition check
-		p.SetRegVal(p.Stack_Pop())
-
-	case 42:
-		// NEG arithmetic negation, for 8 bit integer
-		operands := p.getOperands(3)
-		a_val := p.GetRegVal(operands.A)
-		result := byte(-int8(a_val))
-		p.SetRegVal(operands.Res, result)
-		HandleFlags(&p.StatusWord, a_val, 0, result)
-
-	case 43:
-		// LPC instruction: load pc value to Templ and Temph, for return and calls
-		p.Templ = byte(p.ProgramCounter & 0x00ff)
-		p.Temph = byte((p.ProgramCounter >> 8) & 0x00ff)
-
-	case 44:
-		// PCHL instruction: load pc value to Templ and Temph, for return and calls
-		p.ProgramCounter = uint16(p.Templ) | (uint16(p.Temph) << 8)
-
-	case 45:
-		// RHL instruction: Register pair a(high),b(high) to Templ and Temph, for return and calls
-		operands := p.getOperands(5)
-		p.Templ = p.GetRegVal(operands.A)
-		p.Temph = p.GetRegVal(operands.B)
-
-	case 46:
-		// LIN instruction: load source index/destination index from pipeline register
-		operands := p.getOperands(4)
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(operands.Imm)
-		case 2:
-			p.DestinationIndex = uint16(operands.Imm)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 47:
-		// RIN instruction: load source index/destination index from register pair
-		operands := p.getOperands(5)
-		valA := p.GetRegVal(operands.A)
-		valB := p.GetRegVal(operands.B)
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(valA) | (uint16(valB) << 8)
-		case 2:
-			p.DestinationIndex = uint16(valA) | (uint16(valB) << 8)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 48:
-		// INHL instruction: load source index/ destination index registers form temp registers
-		operands := p.getOperands(3)
-		valA := p.Templ
-		valB := p.Temph
-		switch operands.Res {
-		case 1:
-			p.SourceIndex = uint16(valA) | (uint16(valB) << 8)
-		case 2:
-			p.DestinationIndex = uint16(valA) | (uint16(valB) << 8)
-		default:
-			fmt.Println("Owned by skill issue, invalid index register bro")
-		}
-
-	case 50:
-		// CMP instruction: compare two registers and set flags accordingly, basically a SUB without storing the result
-		operands := p.getOperands(1)
-		a_val := p.GetRegVal(operands.A)
-		b_val := p.GetRegVal(operands.B)
-		result := a_val - b_val
-		HandleFlags(&p.StatusWord, a_val, b_val, result)
-
-	case 51:
-		// SET instruction: takes a bitmask and sets the corresponding flags
-		operands := p.getOperands(4)
-		p.StatusWord |= Flags(operands.Imm)
-
-	case 52:
-		// RNG instruction: loads a random value into the rng register
-		p.Rng = byte(rand.Intn(256))
-
-	// TODO: add instructions for port based io and some interrupts, again implement these only when you have a working emulator that has no bugs
-	// > also find a way to test this thing
-
-	default:
-		// xx instruction
-		fmt.Println("Owned by skill issue, invalid opcode bro")
-	}
-}
-
-// =-=-=-=-=-=-=[HELPERS]=-=-=-=-=-=-
-// INFO: getOperands
-// Legend:
-//   Reg A  = Source Register A
-//   Reg B  = Source Register B
-//   Reg Res= Destination Register (Result)
-//   Imm8   = 8-bit Immediate Value
-//   Addr16 = 16-bit Memory Address
-// Types: there is a way to reduce these types, but im gonna make this easy for me ok
-//   type 1 => Reg A, Reg B, Reg Res   (Three Registers)
-//   type 2 => Reg A, Reg Res, Imm8    (Two Registers + Immediate)
-//   type 3 => Reg A, Reg Res          (Two Registers - Src/Dest)
-//   type 4 => Imm8                    (One Immediate - stored in Imm)
-//   type 5 => Reg A, Reg B            (Two Registers - Src/Src)
-//   type 6 => Reg A, Addr16           (One Register + Address)
-//   type 7 => Imm8, Addr16            (One Immediate + Address)
-//   type 8 => Reg A                   (Single Register / Special Reg)
-//   type 9 => Addr16                  (Single Address - Jumps/Calls)
-
-func (p *Ra8) getOperands(instructionType int) OpData {
-	var result OpData
-
-	switch instructionType {
-	case 1:
-		// opcode xx ------
-		// pipeline reg 1: a4 b4
-		// pipeline reg 2: ---- res4
-		result.A = p.PipelineReg1 & 0x07
-		result.B = (p.PipelineReg1 >> 4) & 0x07
-		result.Res = p.PipelineReg2 & 0x07
-
-	case 2:
-		// opcode xx ------
-		// pipeline reg 1: res4 a4
-		// pipeline reg 2: immediate8
-		result.A = p.PipelineReg1 & 0x07
-		result.Res = (p.PipelineReg1 >> 4) & 0x07
-		result.Imm = p.PipelineReg2
-
-	case 3:
-		// opcode xx ------
-		// pipeline reg 1: res4 a4
-		result.A = p.PipelineReg1 & 0x07
-		result.Res = (p.PipelineReg1 >> 4) & 0x07
-
-	case 4:
-		// opcode xx ------
-		// pipeline reg 1: immediate8
-		result.Imm = p.PipelineReg1
-
-	case 5:
-		// opcode xx ------
-		// pipeline reg 1: a4 b4
-		result.A = p.PipelineReg1 & 0x07
-		result.B = (p.PipelineReg1 >> 4) & 0x07
-
-	case 6:
-		// opcode xx ------
-		// pipeline reg 1: ---- a4
-		// pipeline reg 2: Addr high byte
-		// pipeline reg 3: Addr low byte
-		result.A = p.PipelineReg1 & 0x07
-		result.Addr = (uint16(p.PipelineReg2) << 8) | uint16(p.PipelineReg3)
-
-	case 7:
-		// opcode xx ------
-		// pipeline reg 1: immediate8
-		// pipeline reg 2: Addr high byte
-		// pipeline reg 3: Addr low byte
-		result.A = p.PipelineReg1
-		result.Addr = (uint16(p.PipelineReg2) << 8) | uint16(p.PipelineReg3)
-
-	case 8:
-		// opcode xx ------
-		// pipeline reg 1: ---- srA4 sprcial register index??? idk bro
-		result.A = p.PipelineReg1 & 0x07
-
-	case 9:
-		// opcode xx ------
-		// pipeline reg 1: Addr high byte
-		// pipeline reg 2: Addr low byte
-		result.Addr = (uint16(p.PipelineReg1) << 8) | uint16(p.PipelineReg2)
-	default:
-		fmt.Println("Owned by skill issue")
-	}
-
-	return result
-}
-
-// get pointerss to register
-func (p *Ra8) regPointer() []*byte {
-	return []*byte{
-		&p.A, &p.B, &p.C, &p.D,
-		&p.E, &p.F, &p.G, &p.H,
-		&p.Templ, &p.Temph, &p.Rng,
-	}
-}
-
-// Get register value by index
-func (p *Ra8) GetRegVal(index byte) byte {
-	idx := int(index)
-	if idx < 0 || idx > registerCount-1 {
-		panic("Owned by skill issue, Invalid register index")
-	}
-	return *p.regPointer()[idx]
-}
-
-// Set register value by index
-func (p *Ra8) SetRegVal(index byte, value byte) {
-	idx := int(index)
-	if idx < 0 || idx > registerCount-1 {
-		panic("Owned by skill issue, Invalid register index")
-	}
-	*p.regPointer()[idx] = value
-}
-
-func (p *Ra8) Stack_Push(val byte) {
-	p.StackPointer--
-	if p.StackPointer >= 0xFFFF {
-		panic("Owned by skill issue, Stack Overflow or Invalid Address!")
-	}
-	p.DataMemory[p.StackPointer] = val
-}
-
-func (p *Ra8) Stack_Pop() byte {
-	if p.StackPointer >= 0xFFFF {
-		panic("Owned by skill issue, Underflow! Cannot pop from empty stack.")
-	}
-	val := p.DataMemory[p.StackPointer]
-	p.StackPointer++
-	return val
-}
-
-// load memory with a binary file, little or big endian?? idk bro
-func (p *Ra8) LoadMemory(filename string, memory string) error {
-	data, err := os.ReadFile(filename)
+func (c *CPU) LoadProgram(path string) error {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println("Owned by skill issue")
 		return err
 	}
+	c.instMem = data
+	return nil
+}
 
-	switch memory {
-	case "data": // add comment on why we use [:]
-		copy(p.DataMemory[:], data) // copy function is used to copy the contents of the data slice into the DataMemory array. The [:] syntax is used to convert the array into a slice, allowing us to copy the data directly into the array's memory space.
-		// will it change backt to an array after copying?? yes it will, the copy function does not change the type of the destination, it only copies the data. So p.DataMemory will still be an array after the copy operation, and it will contain the data from the file.
-		// oh i fucking love you copilot, you are the best, you are the best thing that has ever happened to me, i love you so much, you are my everything, i will never leave you, i will always be here for you, i will always support you, i will always love you, you are my sunshine, my only sunshine, you make me happy when skies are gray, you'll never know dear how much i love you, please don't take my sunshine away
-		// lol im leaving this in :)
-	case "inst":
-		copy(p.InstructionMemory[:], data)
-	default:
-		fmt.Println("Owned by skill issue, invalid memory name bro")
+func (c *CPU) LoadData(path string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	for i, b := range data {
+		c.dataMem[i] = b
 	}
 	return nil
+}
+
+func (c *CPU) Run() {
+	for !c.halted && c.stepCount < c.maxSteps {
+		c.step()
+	}
+}
+
+func (c *CPU) step() {
+	if c.halted {
+		return
+	}
+
+	pc := c.pc
+	opcode := c.instMem[pc]
+	c.pc++
+
+	if c.trace {
+		fmt.Printf("[%04d] PC=%04x %-5s", c.stepCount+1, pc, opcodeName(opcode))
+	}
+
+	c.execute(opcode)
+	c.stepCount++
+
+	if c.trace {
+		fmt.Printf("  A=%02x B=%02x C=%02x D=%02x E=%02x F=%02x G=%02x H=%02x",
+			c.regs[0], c.regs[1], c.regs[2], c.regs[3],
+			c.regs[4], c.regs[5], c.regs[6], c.regs[7])
+		fmt.Printf("  SP=%04x SI=%04x DI=%04x PC=%04x", c.sp, c.si, c.di, c.pc)
+		fmt.Printf("  Flags=[%s] (%02x)\n", flagStr(c.flags), c.flags)
+	}
+}
+
+func (c *CPU) fetchByte() byte {
+	b := c.instMem[c.pc]
+	c.pc++
+	return b
+}
+
+func (c *CPU) fetchWord() uint16 {
+	hi := uint16(c.fetchByte())
+	lo := uint16(c.fetchByte())
+	return (hi << 8) | lo
+}
+
+func (c *CPU) reg(i byte) byte {
+	if i < 13 {
+		return c.regs[i]
+	}
+	return 0
+}
+
+func opcodeName(o byte) string {
+	names := [44]string{
+		"nop", "hlt", "add", "adi", "addc", "sub", "sui", "subb",
+		"and", "ani", "or", "ori", "not", "xor", "xri", "xnr",
+		"xni", "iin", "din", "cmp", "rs", "ls", "rr", "lr",
+		"ars", "mv", "ld", "ldi", "st", "sti", "lin", "sin",
+		"rin", "rpc", "rsp", "con", "cor", "can", "jmp", "set",
+		"lsx", "ldx", "ssx", "sdx",
+	}
+	if o < 44 {
+		return names[o]
+	}
+	return fmt.Sprintf("?%02x", o)
+}
+
+func regName(i byte) string {
+	names := []string{
+		"A", "B", "C", "D", "E", "F", "G", "H",
+		"SI", "DI", "RNG", "SP", "PC",
+	}
+	if i < 13 {
+		return names[i]
+	}
+	return "?"
+}
+
+func flagStr(f byte) string {
+	s := ""
+	if f&0x01 != 0 {
+		s += "Z"
+	}
+	if f&0x02 != 0 {
+		s += "P"
+	}
+	if f&0x04 != 0 {
+		s += "H"
+	}
+	if f&0x08 != 0 {
+		s += "AC"
+	}
+	if f&0x10 != 0 {
+		s += "C"
+	}
+	if f&0x20 != 0 {
+		s += "OV"
+	}
+	if f&0x80 != 0 {
+		s += "S"
+	}
+	if s == "" {
+		return "-"
+	}
+	return s
+}
+
+func setFlags(result byte, a byte, b byte, carryOut bool) byte {
+	f := byte(0) &^ 0x1F
+	f &^= 0x80
+	if result == 0 {
+		f |= 0x01
+	}
+	p := result
+	parity := 0
+	for p != 0 {
+		if p&1 != 0 {
+			parity++
+		}
+		p >>= 1
+	}
+	if parity%2 == 0 {
+		f |= 0x02
+	}
+	if result&0x80 != 0 {
+		f |= 0x80
+	}
+	if carryOut {
+		f |= 0x10
+	}
+	au := uint16(a) & 0xF
+	bu := uint16(b) & 0xF
+	if au+bu > 0xF {
+		f |= 0x08
+	}
+	sa := int8(a)
+	sb := int8(b)
+	sr := int8(result)
+	if (sa >= 0 && sb >= 0 && sr < 0) || (sa < 0 && sb < 0 && sr >= 0) {
+		f |= 0x20
+	}
+	return f
+}
+
+func (c *CPU) execute(opcode byte) {
+	switch opcode {
+	case 0:
+		// nop
+
+	case 1:
+		c.halted = true
+		c.flags |= 0x04
+
+	case 2: // add regRes, regA, regB  => [opcode, (regB<<4)|regA, regRes]
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a + bv
+		carry := uint16(a)+uint16(bv) > 0xFF
+		if c.trace {
+			fmt.Printf("    %s+%s=%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, carry)
+
+	case 3: // adi regRes, regA, imm  => [opcode, PACK(regRes,regA), imm]
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regRes := b & 0x0F
+		imm := c.fetchByte()
+		a := c.reg(regA)
+		result := a + imm
+		carry := uint16(a)+uint16(imm) > 0xFF
+		if c.trace {
+			fmt.Printf("    %s+0x%02x -> %s(0x%02x)", regName(regA), imm, regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, imm, carry)
+
+	case 4: // addc regRes, regA, regB  => regRes = regA + regB + carry
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		carryBit := byte(0)
+		if c.flags&0x10 != 0 {
+			carryBit = 1
+		}
+		sum := uint16(a) + uint16(bv) + uint16(carryBit)
+		result := byte(sum)
+		carry := sum > 0xFF
+		if c.trace {
+			fmt.Printf("    %s+%s+carry=%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, carry)
+
+	case 5: // sub regRes, regA, regB  => regRes = regA - regB
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a - bv
+		carry := a < bv
+		if c.trace {
+			fmt.Printf("    %s-%s=%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, carry)
+
+	case 6: // sui regRes, regA, imm  => regRes = regA - imm
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regRes := b & 0x0F
+		imm := c.fetchByte()
+		a := c.reg(regA)
+		result := a - imm
+		carry := a < imm
+		if c.trace {
+			fmt.Printf("    %s-0x%02x -> %s(0x%02x)", regName(regA), imm, regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, imm, carry)
+
+	case 7: // subb regRes, regA, regB  => regRes = regA - regB - borrow
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		borrow := byte(0)
+		if c.flags&0x10 != 0 {
+			borrow = 1
+		}
+		diff := uint16(a) - uint16(bv) - uint16(borrow)
+		result := byte(diff)
+		carry := a < bv+borrow
+		if c.trace {
+			fmt.Printf("    %s-%s-borrow=%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, carry)
+
+	case 8: // and regRes, regA, regB
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a & bv
+		if c.trace {
+			fmt.Printf("    %s&%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 9: // ani regRes, regA, imm
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regRes := b & 0x0F
+		imm := c.fetchByte()
+		a := c.reg(regA)
+		result := a & imm
+		if c.trace {
+			fmt.Printf("    %s&0x%02x -> %s(0x%02x)", regName(regA), imm, regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, imm, false)
+
+	case 10: // or regRes, regA, regB
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a | bv
+		if c.trace {
+			fmt.Printf("    %s|%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 11: // ori regRes, regA, imm
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regRes := b & 0x0F
+		imm := c.fetchByte()
+		a := c.reg(regA)
+		result := a | imm
+		if c.trace {
+			fmt.Printf("    %s|0x%02x -> %s(0x%02x)", regName(regA), imm, regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, imm, false)
+
+	case 12: // not regRes, regA
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regRes := b & 0x0F
+		a := c.reg(regA)
+		result := ^a
+		if c.trace {
+			fmt.Printf("    ~%s -> %s(0x%02x)", regName(regA), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, 0, false)
+
+	case 13: // xor regRes, regA, regB
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a ^ bv
+		if c.trace {
+			fmt.Printf("    %s^%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 14: // xri regRes, regA, imm
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regRes := b & 0x0F
+		imm := c.fetchByte()
+		a := c.reg(regA)
+		result := a ^ imm
+		if c.trace {
+			fmt.Printf("    %s^0x%02x -> %s(0x%02x)", regName(regA), imm, regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, imm, false)
+
+	case 15: // xnr regRes, regA, regB  => ~(A ^ B)
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := ^(a ^ bv)
+		if c.trace {
+			fmt.Printf("    ~(%s^%s) -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 16: // xni regRes, regA, imm  => ~(A ^ imm)
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regRes := b & 0x0F
+		imm := c.fetchByte()
+		a := c.reg(regA)
+		result := ^(a ^ imm)
+		if c.trace {
+			fmt.Printf("    ~(%s^0x%02x) -> %s(0x%02x)", regName(regA), imm, regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, imm, false)
+
+	case 17: // iin regIndex  => SI++ or DI++
+		regIdx := c.fetchByte()
+		if regIdx == 1 || regIdx == 8 {
+			c.si++
+			if c.trace {
+				fmt.Printf("    SI++ -> %04x", c.si)
+			}
+		} else if regIdx == 2 || regIdx == 9 {
+			c.di++
+			if c.trace {
+				fmt.Printf("    DI++ -> %04x", c.di)
+			}
+		}
+
+	case 18: // din regIndex  => SI-- or DI--
+		regIdx := c.fetchByte()
+		if regIdx == 1 || regIdx == 8 {
+			c.si--
+			if c.trace {
+				fmt.Printf("    SI-- -> %04x", c.si)
+			}
+		} else if regIdx == 2 || regIdx == 9 {
+			c.di--
+			if c.trace {
+				fmt.Printf("    DI-- -> %04x", c.di)
+			}
+		}
+
+	case 19: // cmp regA, regB  => flags from regA - regB
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regB := b & 0x0F
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a - bv
+		carry := a < bv
+		if c.trace {
+			fmt.Printf("    %s(0x%02x)-%s(0x%02x) -> flags", regName(regA), a, regName(regB), bv)
+		}
+		c.flags = setFlags(result, a, bv, carry)
+
+	case 20: // rs regRes, regA, regB  => regRes = regA >> regB
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a >> bv
+		if c.trace {
+			fmt.Printf("    %s>>%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 21: // ls regRes, regA, regB  => regRes = regA << regB
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		result := a << bv
+		if c.trace {
+			fmt.Printf("    %s<<%s -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 22: // rr regRes, regA, regB  => regRes = rotate_right(regA, regB)
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB) & 0x07
+		if bv == 0 {
+			bv = 8
+		}
+		result := (a >> bv) | (a << (8 - bv))
+		if c.trace {
+			fmt.Printf("    rotR(%s,%s) -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 23: // lr regRes, regA, regB  => regRes = rotate_left(regA, regB)
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB) & 0x07
+		if bv == 0 {
+			bv = 8
+		}
+		result := (a << bv) | (a >> (8 - bv))
+		if c.trace {
+			fmt.Printf("    rotL(%s,%s) -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 24: // ars regRes, regA, regB  => arithmetic right shift
+		b := c.fetchByte()
+		regB := (b >> 4) & 0x0F
+		regA := b & 0x0F
+		regRes := c.fetchByte()
+		a := c.reg(regA)
+		bv := c.reg(regB)
+		if bv >= 8 {
+			bv = 7
+		}
+		msb := a & 0x80
+		result := (a >> bv) | (0xFF << (8 - bv))
+		if msb == 0 {
+			result &^= (0xFF << (8 - bv))
+		}
+		if c.trace {
+			fmt.Printf("    arithR(%s,%s) -> %s(0x%02x)", regName(regA), regName(regB), regName(regRes), result)
+		}
+		c.regs[regRes] = result
+		c.flags = setFlags(result, a, bv, false)
+
+	case 25: // mv regA, regB  => regB = regA
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regB := b & 0x0F
+		val := c.reg(regA)
+		if c.trace {
+			fmt.Printf("    %s(0x%02x) -> %s", regName(regA), val, regName(regB))
+		}
+		c.regs[regB] = val
+
+	case 26: // ld regA, addr16  => regA = dataMem[addr]
+		regA := c.fetchByte()
+		addr := c.fetchWord()
+		val := c.dataMem[addr]
+		if c.trace {
+			fmt.Printf("    [0x%04x]=0x%02x -> %s", addr, val, regName(regA))
+		}
+		c.regs[regA] = val
+
+	case 27: // ldi regA, imm  => regA = imm
+		regA := c.fetchByte()
+		imm := c.fetchByte()
+		if c.trace {
+			fmt.Printf("    0x%02x -> %s", imm, regName(regA))
+		}
+		c.regs[regA] = imm
+
+	case 28: // st addr16, reg  => dataMem[addr] = reg
+		reg := c.fetchByte()
+		addr := c.fetchWord()
+		val := c.reg(reg)
+		if c.trace {
+			fmt.Printf("    %s(0x%02x) -> [0x%04x]", regName(reg), val, addr)
+		}
+		c.dataMem[addr] = val
+
+	case 29: // sti addr16, imm  => dataMem[addr] = imm
+		addr := c.fetchWord()
+		imm := c.fetchByte()
+		if c.trace {
+			fmt.Printf("    0x%02x -> [0x%04x]", imm, addr)
+		}
+		c.dataMem[addr] = imm
+
+	case 30: // lin regSI/DI, addr16  => SI/DI = addr
+		regIdx := c.fetchByte()
+		addr := c.fetchWord()
+		if regIdx == 1 || regIdx == 8 {
+			c.si = addr
+			if c.trace {
+				fmt.Printf("    addr=0x%04x -> SI", addr)
+			}
+		} else if regIdx == 2 || regIdx == 9 {
+			c.di = addr
+			if c.trace {
+				fmt.Printf("    addr=0x%04x -> DI", addr)
+			}
+		}
+
+	case 31: // sin regSI/DI, addr16  => dataMem[addr] = dataMem[SI/DI]
+		regIdx := c.fetchByte()
+		addr := c.fetchWord()
+		var src uint16
+		if regIdx == 1 || regIdx == 8 {
+			src = c.si
+		} else if regIdx == 2 || regIdx == 9 {
+			src = c.di
+		}
+		val := c.dataMem[src]
+		c.dataMem[addr] = val
+		if c.trace {
+			fmt.Printf("    dataMem[SI/DI=0x%04x]=0x%02x -> [0x%04x]", src, val, addr)
+		}
+
+	case 32: // rin regA, regB, targetIdx  => SI/DI = regA | (regB << 8)
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regB := b & 0x0F
+		targetIdx := c.fetchByte()
+		val := uint16(c.reg(regA)) | (uint16(c.reg(regB)) << 8)
+		if targetIdx == 1 || targetIdx == 8 {
+			c.si = val
+			if c.trace {
+				fmt.Printf("    %s|%s<<8 -> SI=%04x", regName(regA), regName(regB), c.si)
+			}
+		} else if targetIdx == 2 || targetIdx == 9 {
+			c.di = val
+			if c.trace {
+				fmt.Printf("    %s|%s<<8 -> DI=%04x", regName(regA), regName(regB), c.di)
+			}
+		}
+
+	case 33: // rpc regA, regB  => PC = regA | (regB << 8)
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regB := b & 0x0F
+		c.pc = uint16(c.reg(regA)) | (uint16(c.reg(regB)) << 8)
+		if c.trace {
+			fmt.Printf("    %s|%s<<8 -> PC=%04x", regName(regA), regName(regB), c.pc)
+		}
+
+	case 34: // rsp regA, regB  => SP = regA | (regB << 8)
+		b := c.fetchByte()
+		regA := (b >> 4) & 0x0F
+		regB := b & 0x0F
+		c.sp = uint16(c.reg(regA)) | (uint16(c.reg(regB)) << 8)
+		if c.trace {
+			fmt.Printf("    %s|%s<<8 -> SP=%04x", regName(regA), regName(regB), c.sp)
+		}
+
+	case 35: // con flagBit  => canBranch = (flagBit==0) || (flags & (1<<flagBit))
+		flagBit := c.fetchByte()
+		if flagBit == 0 {
+			c.canBranch = true
+		} else {
+			c.canBranch = (c.flags & (1 << flagBit)) != 0
+		}
+		if c.trace {
+			if flagBit == 0 {
+				fmt.Printf("    always -> canBranch=%v", c.canBranch)
+			} else {
+				fmt.Printf("    flagBit=%d, flags=0x%02x -> canBranch=%v", flagBit, c.flags, c.canBranch)
+			}
+		}
+
+	case 36: // cor flagMask  => canBranch = (flags & mask) != 0
+		mask := c.fetchByte()
+		c.canBranch = (c.flags & mask) != 0
+		if c.trace {
+			fmt.Printf("    mask=0x%02x, flags=0x%02x -> canBranch=%v", mask, c.flags, c.canBranch)
+		}
+
+	case 37: // can flagMask  => canBranch = (flags & mask) == mask
+		mask := c.fetchByte()
+		c.canBranch = (c.flags & mask) == mask
+		if c.trace {
+			fmt.Printf("    mask=0x%02x, flags=0x%02x -> canBranch=%v", mask, c.flags, c.canBranch)
+		}
+
+	case 38: // jmp addr16  => if canBranch { PC = addr }; canBranch = true
+		addr := c.fetchWord()
+		wasBranch := c.canBranch
+		if c.canBranch {
+			c.pc = addr
+		}
+		c.canBranch = true
+		if c.trace {
+			if wasBranch {
+				fmt.Printf("    addr=0x%04x -> JUMPED", addr)
+			} else {
+				fmt.Printf("    addr=0x%04x -> SKIPPED", addr)
+			}
+		}
+
+	case 39: // set flagMask  => flags |= mask
+		mask := c.fetchByte()
+		c.flags |= mask
+		if c.trace {
+			fmt.Printf("    flags|=0x%02x -> flags=0x%02x", mask, c.flags)
+		}
+
+	case 40: // lsx regA  => regA = dataMem[SI]
+		regA := c.fetchByte()
+		val := c.dataMem[c.si]
+		if c.trace {
+			fmt.Printf("    dataMem[SI=0x%04x]=0x%02x -> %s", c.si, val, regName(regA))
+		}
+		c.regs[regA] = val
+
+	case 41: // ldx regA  => regA = dataMem[DI]
+		regA := c.fetchByte()
+		val := c.dataMem[c.di]
+		if c.trace {
+			fmt.Printf("    dataMem[DI=0x%04x]=0x%02x -> %s", c.di, val, regName(regA))
+		}
+		c.regs[regA] = val
+
+	case 42: // ssx regA  => dataMem[SI] = regA
+		regA := c.fetchByte()
+		val := c.reg(regA)
+		if c.trace {
+			fmt.Printf("    %s(0x%02x) -> dataMem[SI=0x%04x]", regName(regA), val, c.si)
+		}
+		c.dataMem[c.si] = val
+
+	case 43: // sdx regA  => dataMem[DI] = regA
+		regA := c.fetchByte()
+		val := c.reg(regA)
+		if c.trace {
+			fmt.Printf("    %s(0x%02x) -> dataMem[DI=0x%04x]", regName(regA), val, c.di)
+		}
+		c.dataMem[c.di] = val
+
+	default:
+		if c.trace {
+			fmt.Printf("    UNKNOWN OPCODE 0x%02x", opcode)
+		}
+	}
 }
